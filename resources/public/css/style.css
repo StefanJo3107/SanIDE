@@ -1,9 +1,148 @@
-body {
-    
+@font-face {
+    font-family: "PixelCode";
+    src: url('../fonts/otf/PixelCode.otf');
 }
 
+:root {
+    --main-bg-color: #3B404B;
+    --strong-bg-color: #22252E;
+}
+
+body {
+    font-family: "PixelCode";
+    background-color: var(--main-bg-color);
+    color: white;
+    margin: 0;
+}
+
+#app>div {
+    height: 100vh;
+}
+
+/* NAVBAR */
 .navbar>.container {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    color: white;
+    height: 60px;
+}
+
+.title-container {
+    margin-left: 2rem;
+    margin-right: 4rem;
+    display: flex;
+    align-items: center;
+}
+
+.title-container img {
+    width: 70px;
+}
+
+.title {
+    font-size: 1.2rem;
+}
+
+.item-char {
+    text-decoration: underline;
+}
+
+.navitem, .tabitem {
+    background-color: transparent;
+    border: none;
+    font-family: "PixelCode";
+    font-size: 1rem;
+    cursor: pointer;
+    color: white;
+    margin-right: 1rem;
+}
+
+/* -------------------------------------*/
+
+/* MENU */
+.menu {
+    display: flex;
+    margin-left: 3rem;
+    margin-top: 0.5rem;
+}
+
+.tabitem {
+    margin: 0;
+    width: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 2rem;
+}
+
+.tabback {
+    position: absolute;
+    z-index: -1;
+    width: 140px;
+}
+/* -------------------------------------*/
+
+/* EDITOR */
+.editor {
+    background-color: var(--strong-bg-color);
+    display: flex;
+    height: 85%;
+    margin-top: 0.4rem;
+    outline: 2px solid black;
+    border: 2px solid #455766;
+}
+
+.filesystem {
+    height: 97.5%;
+    width: 16rem;
+    align-self: center;
+    margin-left: 0.5rem;
+    background-color: #3B404B;
+    border: 2px solid #455766;
+}
+
+.filetree {
+    list-style: none;
+    padding-left: 0rem;
+}
+
+.treelink {
+    padding-left: 1rem;
+    height: 2rem;
+}
+
+.filetree > li > ul {
+    list-style: none;
+}
+
+.rootfolder-link {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.rootfolder-link:hover {
+    background-color: var(--strong-bg-color);
+}
+
+.rootfolder-link>.folder-name {
+    margin-left: 0.5rem;
+    flex-grow: 1;
+}
+
+.rootfolder-link>.folder-expand {
+    margin-right: 1rem;
+}
+
+.files {
+    padding-left: 0;
+}
+
+.filelink {
+    height: 2rem;
+    padding-left: 3rem;
+    cursor: pointer;
+}
+
+.filelink:hover {
+    background-color: var(--strong-bg-color);
 }
