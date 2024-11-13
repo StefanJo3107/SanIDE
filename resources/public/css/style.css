@@ -86,16 +86,19 @@ body {
     background-color: var(--strong-bg-color);
     display: flex;
     height: 85%;
+    /* width: 100%; */
     margin-top: 0.4rem;
     outline: 2px solid black;
     border: 2px solid #455766;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
 }
 
 .filesystem {
-    height: 97.5%;
     width: 16rem;
-    align-self: center;
     margin-left: 0.5rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
     background-color: #3B404B;
     border: 2px solid #455766;
 }
@@ -145,4 +148,42 @@ body {
 
 .filelink:hover {
     background-color: var(--strong-bg-color);
+}
+
+.code-editor {
+    width: 100%;
+}
+
+.editor-header {
+    background-color: #3B404B;
+    border: 2px solid #455766;
+    margin-top: 0.5rem;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+.editor-btns {
+    display: flex;
+}
+
+.editor-btns>button {
+    background-color: transparent;
+    border: 2px solid #455766;
+    font-family: "PixelCode";
+    font-size: 1rem;
+    cursor: pointer;
+    color: white;
+    margin-left: 1rem;
+    display: flex;
+    align-items: center;
+}
+
+.editor-btns>button>img{
+    margin-right: 0.5rem;
 }

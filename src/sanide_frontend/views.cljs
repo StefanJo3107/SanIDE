@@ -45,15 +45,21 @@
                                           [:li.filelink "paint"]] [:span])]]]))
 
 (defn texteditor []
-  [:div.texteditor])
+  [:div.texteditor
+   [:div.editor-header [:span.filename "reverse-shell/payload.san"]
+    [:div.editor-btns
+     [:button.buildbtn [:img {:src "/images/build-icon.png"}] [:span "Build"]]
+     [:button.flashbtn [:img {:src "/images/flash-icon.png"}] [:span "Flash"]]
+     [:button.simulatebtn [:img {:src "/images/simulate-icon.png"}] [:span "Simulate"]]]]
+   [:div.codearea]])
 
-(defn terminal []
-  [:div.terminal])
+(defn output []
+  [:div.output])
 
 (defn editor []
   [:div.editor
    [filesystem]
-   [:div.code-editor [texteditor] [terminal]]])
+   [:div.code-editor [texteditor] [output]]])
 
 (defn main-panel []
   (let [name (re-frame/subscribe [::subs/name]) active-item (re-frame/subscribe [::subs/active-item])]
