@@ -50,7 +50,7 @@
 
 
 (defn output []
-  [:div.output "Output:"])
+  [:div.output "Output:" [:div.output-terminal]])
 
 (defn texteditor []
   [:div.text-editor
