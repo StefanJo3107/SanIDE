@@ -3,8 +3,9 @@
    [reagent.core :as r]
    [re-frame.core :as re-frame]
    [sanide-frontend.events :as events]
-   [sanide-frontend.subs :as subs]))
-
+   [sanide-frontend.subs :as subs]
+   [goog.dom :as dom]
+   ["@monaco-editor/react$default" :as Editor]))
 
 (defn nav-item [name onclick]
   [:button.navitem {:onClick onclick} [:span.item-char (first name)] [:span.item-rest (rest name)]])
@@ -44,22 +45,30 @@
                                           [:li.filelink "youtube"]
                                           [:li.filelink "paint"]] [:span])]]]))
 
-(defn texteditor []
-  [:div.texteditor
-   [:div.editor-header [:span.filename "reverse-shell/payload.san"]
-    [:div.editor-btns
-     [:button.buildbtn [:img {:src "/images/build-icon.png"}] [:span "Build"]]
-     [:button.flashbtn [:img {:src "/images/flash-icon.png"}] [:span "Flash"]]
-     [:button.simulatebtn [:img {:src "/images/simulate-icon.png"}] [:span "Simulate"]]]]
-   [:div.codearea]])
+(defn button [icon text]
+  [:button.btn [:img {:src icon}] [:span text]])
+
 
 (defn output []
-  [:div.output])
+  [:div.output "Output:"])
+
+(defn texteditor []
+  [:div.text-editor
+   [:div.editor-header [:span.filename "reverse-shell/payload.san"]
+    [:div.editor-btns
+     [button "/images/build-icon.png" "Build"]
+     [button "/images/flash-icon.png" "Flash"]
+     [button "/images/simulate-icon.png" "Simulate"]]]
+   [:div.code [:div.codearea [:> Editor {:height "100%"
+                              ;; :defaultLanguage "javascript"
+                                         :theme "vs-dark"
+                                         :options (clj->js {"minimap" {"enabled" false} "automaticLayout" true})}]]
+    [output]]])
 
 (defn editor []
   [:div.editor
    [filesystem]
-   [:div.code-editor [texteditor] [output]]])
+   [texteditor]])
 
 (defn main-panel []
   (let [name (re-frame/subscribe [::subs/name]) active-item (re-frame/subscribe [::subs/active-item])]
