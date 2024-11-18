@@ -15,13 +15,17 @@
   (ring/ring-handler
    (ring/router
     [["/fs"
+      ["/new" {:post {:summary "Creates new sanscript project"
+                      :parameters {:body {:project_name s/Str}}
+                      :handler handler/new-project
+                      :responses {200 {:body {:project_path s/Str :payload_content s/Str :payload_name s/Str :config_content s/Str}}}}}]
       ["/open-dialog" {:get {:summary "Opens file dialog for project selection"
                              :handler handler/pick-project
-                             :responses {200 {:body {:project_path s/Str :payload_content s/Str :config_content s/Str}}}}}]
+                             :responses {200 {:body {:project_path s/Str :payload_content s/Str :payload_name s/Str :config_content s/Str}}}}}]
       ["/open-example" {:get {:summary "Opens desired example project"
                               :handler handler/open-example
                               :parameters {:body {:project_path s/Str}}
-                              :responses {200 {:body {:project_path s/Str :payload_content s/Str :config_content s/Str}}}}}]
+                              :responses {200 {:body {:project_path s/Str :payload_content s/Str :payload_name s/Str :config_content s/Str}}}}}]
       ["/get-examples" {:get {:summary "Returns list of paths for example projects"
                               :handler handler/get-examples
                               :responses {200 {:body [{:example_name s/Str :example_path s/Str}]}}}}]
