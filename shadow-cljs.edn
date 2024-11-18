@@ -1,15 +1,6 @@
 {:nrepl {:port 8777}
-
-
-
- :source-paths ["src" "test"]
-
- :dependencies
- [[reagent "1.2.0"]
-  [re-frame "1.4.2"]
-
-  [binaryage/devtools "1.0.6"]]
-
+ :deps true
+ 
  :dev-http
  {8280 "resources/public"
   8290 "target/browser-test"}
