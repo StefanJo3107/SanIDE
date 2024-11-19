@@ -28,4 +28,5 @@
 
 (defn -main [& _]
   (run-server {:dev-mode? true :server-options {:port 9000}})
-  (log/info "Started server on http://localhost:9000"))
+  (log/info "Started server on http://localhost:9000")
+  (log/info "Swagger UI available on http://localhost:9000/api-docs/"))

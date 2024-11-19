@@ -24,11 +24,11 @@
                              :responses {200 {:body {:project_path s/Str :payload_content s/Str :payload_name s/Str :config_content s/Str}}}}}]
       ["/open-example" {:get {:summary "Opens desired example project"
                               :handler handler/open-example
-                              :parameters {:body {:project_path s/Str}}
+                              :parameters {:body {:example_name s/Str}}
                               :responses {200 {:body {:project_path s/Str :payload_content s/Str :payload_name s/Str :config_content s/Str}}}}}]
       ["/get-examples" {:get {:summary "Returns list of paths for example projects"
                               :handler handler/get-examples
-                              :responses {200 {:body [{:example_name s/Str :example_path s/Str}]}}}}]
+                              :responses {200 {:body [{:example_name s/Str}]}}}}]
       ["/save" {:post {:summary "Saves content to the desired file"
                        :parameters {:body {:file_path s/Str :content s/Str}}
                        :handler handler/save-file
@@ -41,6 +41,7 @@
                                           :version     "0.1.0"}}
                               :handler (swagger/create-swagger-handler)}}]
       ["/api-docs/*" {:get (swagger-ui/create-swagger-ui-handler)}]]]
+
     {:data {:muuntaja   m/instance
             :coercion   rcs/coercion
             :middleware [rrmm/format-middleware
@@ -49,7 +50,5 @@
                          rrc/coerce-request-middleware
                          [wrap-cors :access-control-allow-origin  #".*"
                           :access-control-allow-methods [:get :put :post :patch :delete]]]}})
-   (ring/routes
-    (swagger-ui/create-swagger-ui-handler {:path "/"}))
    (ring/create-default-handler
     {:not-found (constantly {:status 404 :body "Not found"})})))
