@@ -8,6 +8,7 @@
             [reitit.ring.coercion :as rrc]
             [reitit.ring.middleware.muuntaja :as rrmm]
             [ring.middleware.cors :refer [wrap-cors]]
+            [ring.middleware.params :as params]
             [schema.core :as s]))
 
 (defn app
@@ -18,14 +19,22 @@
       ["/new" {:post {:summary "Creates new sanscript project"
                       :parameters {:body {:project_name s/Str}}
                       :handler handler/new-project
-                      :responses {200 {:body {:project_path s/Str :payload_content s/Str :payload_name s/Str :config_content s/Str}}}}}]
+                      :responses {200 {:body {:project_path s/Str
+                                              :payload_content s/Str
+                                              :payload_name s/Str
+                                              :config_content s/Str}}}}}]
       ["/open-dialog" {:get {:summary "Opens file dialog for project selection"
                              :handler handler/pick-project
-                             :responses {200 {:body {:project_path s/Str :payload_content s/Str :payload_name s/Str :config_content s/Str}}}}}]
+                             :responses {200 {:body {:project_path s/Str
+                                                     :payload_content s/Str
+                                                     :payload_name s/Str
+                                                     :config_content s/Str}}}}}]
       ["/open-example" {:get {:summary "Opens desired example project"
                               :handler handler/open-example
-                              :parameters {:body {:example_name s/Str}}
-                              :responses {200 {:body {:project_path s/Str :payload_content s/Str :payload_name s/Str :config_content s/Str}}}}}]
+                              :parameters {:query {:example_name s/Str}}
+                              :responses {200 {:body {:project_path s/Str
+                                                      :payload_content s/Str
+                                                      :payload_name s/Str :config_content s/Str}}}}}]
       ["/get-examples" {:get {:summary "Returns list of paths for example projects"
                               :handler handler/get-examples
                               :responses {200 {:body [s/Str]}}}}]
@@ -44,7 +53,8 @@
 
     {:data {:muuntaja   m/instance
             :coercion   rcs/coercion
-            :middleware [rrmm/format-middleware
+            :middleware [params/wrap-params
+                         rrmm/format-middleware
                          rrc/coerce-exceptions-middleware
                          rrc/coerce-response-middleware
                          rrc/coerce-request-middleware
