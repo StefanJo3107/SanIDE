@@ -44,3 +44,6 @@
     (create-dir dir)
     (create-file payload "print \"Hello SanUSB\"")
     (create-file config "mode=\"auto\"")))
+
+(defn file-exists? [file-path]
+  (.exists (java.io.File. file-path)))

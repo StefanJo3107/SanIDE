@@ -2,7 +2,8 @@
   (:require [ring.util.http-response :as response]
             [sanide-backend.helpers :as helpers]
             [sanide-backend.config :as config]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [clojure.string :as str]))
 
 (defn new-project [{{{:keys [project_name]} :body} :parameters}]
   (let [parent-dir-path (helpers/get-file-path (helpers/dir-picker))]
@@ -39,5 +40,9 @@
                     :config_content (helpers/read-file-content example-dir "config.toml")})
       (response/bad-request))))
 
-(defn save-file [_]
-  (response/ok))
+(defn save-file [{{{:keys [file_path content]} :body} :parameters}]
+  (if (helpers/file-exists? file_path)
+    (do
+      (helpers/create-file file_path content)
+      (response/ok))
+    response/bad-request))
