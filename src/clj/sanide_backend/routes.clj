@@ -28,7 +28,7 @@
                               :responses {200 {:body {:project_path s/Str :payload_content s/Str :payload_name s/Str :config_content s/Str}}}}}]
       ["/get-examples" {:get {:summary "Returns list of paths for example projects"
                               :handler handler/get-examples
-                              :responses {200 {:body [{:example_name s/Str}]}}}}]
+                              :responses {200 {:body [s/Str]}}}}]
       ["/save" {:post {:summary "Saves content to the desired file"
                        :parameters {:body {:file_path s/Str :content s/Str}}
                        :handler handler/save-file

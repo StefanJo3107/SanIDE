@@ -1,8 +1,7 @@
 (ns sanide-backend.handlers
   (:require [ring.util.http-response :as response]
-            [sanide-backend.helpers :as helpers]))
-
-;; ------------ HANDLERS ------------ 
+            [sanide-backend.helpers :as helpers]
+            [sanide-backend.config :as config]))
 
 (defn new-project [{{{:keys [project_name]} :body} :parameters}]
   (let [parent-dir-path (helpers/get-file-path (helpers/dir-picker))]
@@ -22,12 +21,16 @@
                     :config_content (helpers/read-file-content dir "config.toml")})
       (response/bad-request))))
 
-(defn open-example [_]
+(defn get-examples [_]
+  (let [examples (reduce #(if (helpers/is-san-project? (java.io.File. (str config/examples_path "/" %2)))
+                            (conj %1 %2)
+                            %1)
+                         []
+                         (helpers/get-filenames (java.io.File. config/examples_path)))]
+    (response/ok examples)))
 
+(defn open-example [_]
   (response/ok))
 
 (defn save-file [_]
-  (response/ok))
-
-(defn get-examples [_]
   (response/ok))
