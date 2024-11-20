@@ -45,8 +45,8 @@
                                           [:li.filelink "youtube"]
                                           [:li.filelink "paint"]] [:span])]]]))
 
-(defn button [icon text]
-  [:button.btn [:img {:src icon}] [:span text]])
+(defn button [icon text onclick]
+  [:button.btn {:onClick onclick} [:img {:src icon}] [:span text]])
 
 
 (defn output []
@@ -56,9 +56,9 @@
   [:div.text-editor
    [:div.editor-header [:span.filename "reverse-shell/payload.san"]
     [:div.editor-btns
-     [button "/images/build-icon.png" "Build"]
-     [button "/images/flash-icon.png" "Flash"]
-     [button "/images/simulate-icon.png" "Simulate"]]]
+     [button "/images/build-icon.png" "Build" #(re-frame/dispatch [::events/get-new-project "novi"])]
+     [button "/images/flash-icon.png" "Flash" #()]
+     [button "/images/simulate-icon.png" "Simulate" #()]]]
    [:div.code [:div.codearea [:> Editor {:height "100%"
                               ;; :defaultLanguage "javascript"
                                          :theme "vs-dark"

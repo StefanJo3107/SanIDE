@@ -4,7 +4,8 @@
    [sanide-frontend.db :as db]
    [sanide-frontend.config :as config]
    [day8.re-frame.http-fx]
-   [cljs-ajax/cljs-ajax :as ajax]))
+   [ajax.core :as ajax]
+   [taoensso.timbre :as log]))
 
 ;; reg-event-db
 (re-frame/reg-event-db
@@ -26,7 +27,10 @@
 (re-frame/reg-event-db
  ::new-project-result
  (fn [db [_ result]]
-   ()))
+   (assoc db :project-path (:project_path result)
+          :payload-content (:payload_content result)
+          :payload-name (:payload_name result)
+          :config-content (:config_content result))))
 
 ;; reg-event-fx
 (re-frame/reg-event-fx
@@ -34,7 +38,7 @@
  (fn [_ [_ name]]
    {:http-xhrio {:method :get
                  :uri (str config/api-url "/fs/new")
-                 :params name
+                 :params {:project_name name}
                  :response-format (ajax/json-response-format {:keywords? true})
                  :on-success [::new-project-result]
                  :on-failure [::new-project-failure]}}))
