@@ -11,3 +11,8 @@
  ::active-item
  (fn [db]
    (:active-item db)))
+
+(re-frame/reg-sub
+ ::project-path
+ (fn [db]
+   (:project-path db)))

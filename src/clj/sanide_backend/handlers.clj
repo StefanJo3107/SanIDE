@@ -1,11 +1,9 @@
 (ns sanide-backend.handlers
   (:require [ring.util.http-response :as response]
             [sanide-backend.helpers :as helpers]
-            [sanide-backend.config :as config]
-            [taoensso.timbre :as log]
-            [clojure.string :as str]))
+            [sanide-backend.config :as config]))
 
-(defn new-project [{{{:keys [project_name]} :body} :parameters}]
+(defn new-project [{{{:keys [project_name]} :query} :parameters}]
   (let [parent-dir-path (helpers/get-file-path (helpers/dir-picker))]
     (helpers/create-project parent-dir-path project_name)
     (let [project-path (str parent-dir-path "/" project_name) project-dir (java.io.File. project-path)]

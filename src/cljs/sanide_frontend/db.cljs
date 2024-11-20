@@ -2,4 +2,5 @@
 
 (def default-db
   {:name "re-frame"
-   :active-item :editor})
+   :active-item :editor
+   :project-path (js->clj (.getItem js/localStorage "project-path"))})
