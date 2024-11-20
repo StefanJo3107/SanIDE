@@ -13,6 +13,6 @@
    (:active-item db)))
 
 (re-frame/reg-sub
- ::project-path
+ ::project
  (fn [db]
-   (:project-path db)))
+   (:project db)))

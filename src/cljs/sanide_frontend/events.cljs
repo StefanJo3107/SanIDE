@@ -19,18 +19,19 @@
    (assoc db :active-item val)))
 
 (re-frame/reg-event-db
- ::set-loaded-project
+ ::cache-loaded-project
  (fn [db [_ val]]
-   (js->clj (.setItem js/localStorage "project-path" val))
-   (assoc db :project-path val)))
+   (js->clj (.setItem js/localStorage "project" val))))
 
 (re-frame/reg-event-db
  ::new-project-result
  (fn [db [_ result]]
-   (assoc db :project-path (:project_path result)
-          :payload-content (:payload_content result)
-          :payload-name (:payload_name result)
-          :config-content (:config_content result))))
+   (assoc db :project result)))
+
+(re-frame/reg-event-db
+ ::new-project-failure
+ (fn [db [_ fail]]
+   (log/error fail)))
 
 ;; reg-event-fx
 (re-frame/reg-event-fx
