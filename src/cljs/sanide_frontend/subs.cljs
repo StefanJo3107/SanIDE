@@ -16,3 +16,8 @@
  ::project
  (fn [db]
    (:project db)))
+
+(re-frame/reg-sub
+ ::show-project
+ (fn [db]
+   (:show-project db)))

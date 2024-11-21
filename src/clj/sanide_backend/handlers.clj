@@ -1,7 +1,8 @@
 (ns sanide-backend.handlers
   (:require [ring.util.http-response :as response]
             [sanide-backend.helpers :as helpers]
-            [sanide-backend.config :as config]))
+            [sanide-backend.config :as config]
+            [taoensso.timbre :as log]))
 
 (defn new-project [{{{:keys [project_name]} :query} :parameters}]
   (let [parent-dir-path (helpers/get-file-path (helpers/dir-picker))]
@@ -36,6 +37,15 @@
                     :payload_content (helpers/read-file-content example-dir (helpers/get-file-with-extension example-dir ".san"))
                     :payload_name (helpers/get-file-with-extension example-dir ".san")
                     :config_content (helpers/read-file-content example-dir "config.toml")})
+      (response/bad-request))))
+
+(defn open-at-path [{{{:keys [path]} :query} :parameters}]
+  (let [dir (java.io.File. path)]
+    (if (helpers/is-san-project? dir)
+      (response/ok {:project_path path
+                    :payload_content (helpers/read-file-content dir (helpers/get-file-with-extension dir ".san"))
+                    :payload_name (helpers/get-file-with-extension dir ".san")
+                    :config_content (helpers/read-file-content dir "config.toml")})
       (response/bad-request))))
 
 (defn save-file [{{{:keys [file_path content]} :body} :parameters}]

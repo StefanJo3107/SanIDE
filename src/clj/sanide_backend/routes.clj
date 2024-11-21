@@ -29,6 +29,13 @@
                                                      :payload_content s/Str
                                                      :payload_name s/Str
                                                      :config_content s/Str}}}}}]
+      ["/open-path" {:get {:summary "Opens file dialog for project selection"
+                           :handler handler/open-at-path
+                           :parameters {:query {:path s/Str}}
+                           :responses {200 {:body {:project_path s/Str
+                                                   :payload_content s/Str
+                                                   :payload_name s/Str
+                                                   :config_content s/Str}}}}}]
       ["/open-example" {:get {:summary "Opens desired example project"
                               :handler handler/open-example
                               :parameters {:query {:example_name s/Str}}

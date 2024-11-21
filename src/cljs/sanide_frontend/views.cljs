@@ -30,14 +30,14 @@
      [tab-item "IRC Client" (= @active-item :irc) #(re-frame/dispatch [::events/set-active-item :irc])]
      [tab-item "Simulator" (= @active-item :simulator) #(re-frame/dispatch [::events/set-active-item :simulator])]]))
 
-(defn filesystem ^clj []
+(defn filesystem ^clj [show-project project]
   (r/with-let [expanded-fs? (r/atom false) expanded-ex? (r/atom false)]
     [:div.filesystem [:ul.filetree
-                      [:li.rootfolder [:div.rootfolder-link.treelink {:onClick #(swap! expanded-fs? not)}
-                                       [:img {:src (if @expanded-fs? "/images/folder-open.png" "images/folder-closed.png")}] [:span.folder-name "Files"] (if @expanded-fs? [:span.folder-expand "▾"] [:span.folder-expand "▸"])]
-                       (if @expanded-fs? [:ul.files
-                                          [:li.filelink "payload.san"]
-                                          [:li.filelink "config.toml"]] [:span])]
+                      (when (= show-project true) [:li.rootfolder [:div.rootfolder-link.treelink {:onClick #(swap! expanded-fs? not)}
+                                                                   [:img {:src (if @expanded-fs? "/images/folder-open.png" "images/folder-closed.png")}] [:span.folder-name "Files"] (if @expanded-fs? [:span.folder-expand "▾"] [:span.folder-expand "▸"])]
+                                                   (if @expanded-fs? [:ul.files
+                                                                      [:li.filelink (:payload_name project)]
+                                                                      [:li.filelink "config.toml"]] [:span])])
                       [:li.rootfolder [:div.rootfolder-link.treelink {:onClick #(swap! expanded-ex? not)}
                                        [:img {:src "/images/examples-icon.png"}] [:span.folder-name "Examples"] (if @expanded-ex? [:span.folder-expand "▾"] [:span.folder-expand "▸"])]
                        (if @expanded-ex? [:ul.files
@@ -52,23 +52,49 @@
 (defn output []
   [:div.output "Output:" [:div.output-terminal]])
 
-(defn texteditor []
+(defn text-editor [project]
   [:div.text-editor
-   [:div.editor-header [:span.filename "reverse-shell/payload.san"]
+   [:div.editor-header [:span.filename (str (:project_path project) "/" (:payload_name project))]
     [:div.editor-btns
-     [button "/images/build-icon.png" "Build" #(re-frame/dispatch [::events/get-new-project "novi"])]
+     [button "/images/build-icon.png" "Build" #()]
      [button "/images/flash-icon.png" "Flash" #()]
      [button "/images/simulate-icon.png" "Simulate" #()]]]
    [:div.code [:div.codearea [:> Editor {:height "100%"
                               ;; :defaultLanguage "javascript"
                                          :theme "vs-dark"
+                                         :defaultValue (:payload_content project)
                                          :options (clj->js {"minimap" {"enabled" false} "automaticLayout" true})}]]
     [output]]])
 
+(defn empty-area []
+  [:div.empty-area
+   [:div.welcome-text
+    [:pre.ascii-art
+     "_____/\\\\\\\\\\\\\\\\\\\\\\_________________________________/\\\\\\\\\\\\\\\\\\\\\\__/\\\\\\\\\\\\\\\\\\\\\\\\_____/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_        
+ ___/\\\\\\/////////\\\\\\______________________________\\/////\\\\\\///__\\/\\\\\\////////\\\\\\__\\/\\\\\\///////////__       
+  __\\//\\\\\\______\\///___________________________________\\/\\\\\\_____\\/\\\\\\______\\//\\\\\\_\\/\\\\\\_____________      
+   ___\\////\\\\\\__________/\\\\\\\\\\\\\\\\\\_____/\\\\/\\\\\\\\\\\\_______\\/\\\\\\_____\\/\\\\\\_______\\/\\\\\\_\\/\\\\\\\\\\\\\\\\\\\\\\_____     
+    ______\\////\\\\\\______\\////////\\\\\\___\\/\\\\\\////\\\\\\______\\/\\\\\\_____\\/\\\\\\_______\\/\\\\\\_\\/\\\\\\///////______    
+     _________\\////\\\\\\_____/\\\\\\\\\\\\\\\\\\\\__\\/\\\\\\__\\//\\\\\\_____\\/\\\\\\_____\\/\\\\\\_______\\/\\\\\\_\\/\\\\\\_____________   
+      __/\\\\\\______\\//\\\\\\___/\\\\\\/////\\\\\\__\\/\\\\\\___\\/\\\\\\_____\\/\\\\\\_____\\/\\\\\\_______/\\\\\\__\\/\\\\\\_____________  
+       _\\///\\\\\\\\\\\\\\\\\\\\\\/___\\//\\\\\\\\\\\\\\\\/\\\\_\\/\\\\\\___\\/\\\\\\__/\\\\\\\\\\\\\\\\\\\\\\_\\/\\\\\\\\\\\\\\\\\\\\\\\\/___\\/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_ 
+        ___\\///////////______\\////////\\//__\\///____\\///__\\///////////__\\////////////_____\\///////////////__"]
+    [:div.info-text "Welcome to the IDE for SanScript and SanUSB"]
+    [:div.info-text "To get started, create new project or open an existing one"]]
+   [:div.project-btns
+    [button "/images/build-icon.png" "New" #(re-frame/dispatch [::events/get-new-project "novi"])]
+    [button "/images/flash-icon.png" "Open" #(re-frame/dispatch [::events/open-dialog])]]])
+
 (defn editor []
-  [:div.editor
-   [filesystem]
-   [texteditor]])
+  (let [show-project (re-frame/subscribe [::subs/show-project])
+        project (re-frame/subscribe [::subs/project])]
+    (if (= true @show-project)
+      [:div.editor
+       [filesystem @show-project @project]
+       [text-editor @project]]
+      [:div.editor
+       [filesystem @show-project]
+       [empty-area]])))
 
 (defn main-panel []
   (let [name (re-frame/subscribe [::subs/name]) active-item (re-frame/subscribe [::subs/active-item])]

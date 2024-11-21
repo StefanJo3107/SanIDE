@@ -4,8 +4,7 @@
    [re-frame.core :as re-frame]
    [sanide-frontend.events :as events]
    [sanide-frontend.views :as views]
-   [sanide-frontend.config :as config]
-   ))
+   [sanide-frontend.config :as config]))
 
 
 (defn dev-setup []
@@ -20,5 +19,8 @@
 
 (defn init []
   (re-frame/dispatch-sync [::events/initialize-db])
+  (let [project  (js->clj (.parse js/JSON (.getItem js/localStorage "project")) :keywordize-keys true)]
+    (when (some? project)
+      (re-frame/dispatch [::events/open-at-path (:project_path project)])))
   (dev-setup)
   (mount-root))
