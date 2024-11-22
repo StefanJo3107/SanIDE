@@ -21,3 +21,8 @@
  ::show-project
  (fn [db]
    (:show-project db)))
+
+(re-frame/reg-sub
+ ::active-file
+ (fn [db]
+   (:active-file db)))

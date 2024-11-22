@@ -149,6 +149,11 @@ body {
     text-overflow: ellipsis;
 }
 
+.filelink.active {
+    background-color: var(--strong-bg-color);
+    padding-left: 1.66rem;
+}
+
 .filelink:hover {
     background-color: var(--strong-bg-color);
 }

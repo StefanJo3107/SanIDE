@@ -24,7 +24,7 @@
 
 (re-frame/reg-event-db
  ::cache-loaded-project
- (fn [db [_ val]]
+ (fn [_ [_ val]]
    (.setItem js/localStorage "project" (.stringify js/JSON (clj->js val)))))
 
 (re-frame/reg-event-db
