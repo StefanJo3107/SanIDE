@@ -48,7 +48,7 @@
       ["/save" {:post {:summary "Saves content to the desired file"
                        :parameters {:body {:file_path s/Str :content s/Str}}
                        :handler handler/save-file
-                       :responses {200 {:body nil}}}}]]
+                       :responses {200 {:body {:file_path s/Str :content s/Str}}}}}]]
      ["" {:no-doc true}
       ["/swagger.json" {:get {:no-doc  true
                               :swagger

@@ -4,7 +4,8 @@
    [sanide-frontend.db :as db]
    [sanide-frontend.config :as config]
    [day8.re-frame.http-fx]
-   [ajax.core :as ajax]))
+   [ajax.core :as ajax]
+   [clojure.string :as str]))
 
 ;; reg-event-db
 (re-frame/reg-event-db
@@ -37,14 +38,25 @@
  (fn [db [_ fail]]
    (assoc db :open-project-failure fail)))
 
+(re-frame/reg-event-db
+ ::save-project-failure
+ (fn [db [_ fail]]
+   (assoc db :save-project-failure fail)))
+
 
 ;; reg-event-fx
 (re-frame/reg-event-fx
  ::open-project-fx
  (fn [cofx [_ result]]
-   {:db (assoc (:db cofx) :project result :show-project true)
-    :fx [[:dispatch [::cache-loaded-project result]]
-         [:dispatch [::set-active-file (:payload_name result)]]]}))
+   {:db (assoc (:db cofx) :project result :show-project true :active-file (:payload_name result))
+    :fx [[:dispatch [::cache-loaded-project result]]]}))
+
+(re-frame/reg-event-fx
+ ::save-project-fx
+ (fn [cofx [_ result]]
+   (let [file_name (last (str/split (:file_path result) #"/"))]
+     {:db (update-in (:db cofx) [:project] assoc (if (= file_name "config.toml") :config_content :payload_content) (:content result))
+      :fx [[:dispatch [::cache-loaded-project result]]]})))
 
 (re-frame/reg-event-fx
  ::get-new-project
@@ -74,3 +86,14 @@
                  :response-format (ajax/json-response-format {:keywords? true})
                  :on-success [::open-project-fx]
                  :on-failure [::open-project-failure]}}))
+
+(re-frame/reg-event-fx
+ ::save-file
+ (fn [_ [_ file]]
+   {:http-xhrio {:method :post
+                 :uri (str config/api-url "/fs/save")
+                 :params {:file_path (:file_path file) :content (:content file)}
+                 :request-format (ajax/json-request-format)
+                 :response-format (ajax/json-response-format {:keywords? true})
+                 :on-success [::save-project-fx]
+                 :on-failure [::save-project-failure]}}))

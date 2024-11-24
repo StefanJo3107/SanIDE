@@ -52,5 +52,5 @@
   (if (helpers/file-exists? file_path)
     (do
       (helpers/create-file file_path content)
-      (response/ok))
+      (response/ok {:file_path file_path :content content}))
     (response/bad-request)))
