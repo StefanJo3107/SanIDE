@@ -1,11 +1,12 @@
 @font-face {
     font-family: "PixelCode";
-    src: url('../fonts/otf/PixelCode.otf');
+    src: url("../fonts/otf/PixelCode.otf");
 }
 
 :root {
-    --main-bg-color: #3B404B;
-    --strong-bg-color: #22252E;
+    --main-bg-color: #3b404b;
+    --strong-bg-color: #22252e;
+    --border-color: #455766;
 }
 
 body {
@@ -15,12 +16,12 @@ body {
     margin: 0;
 }
 
-#app>div {
+#app > div {
     height: 100vh;
 }
 
 /* NAVBAR */
-.navbar>.container {
+.navbar > .container {
     display: flex;
     align-items: center;
     color: white;
@@ -46,7 +47,8 @@ body {
     text-decoration: underline;
 }
 
-.navitem, .tabitem {
+.navitem,
+.tabitem {
     background-color: transparent;
     border: none;
     font-family: "PixelCode";
@@ -89,7 +91,7 @@ body {
     /* width: 100%; */
     margin-top: 0.4rem;
     outline: 2px solid black;
-    border: 2px solid #455766;
+    border: 2px solid var(--border-color);
     margin-left: 0.5rem;
     margin-right: 0.5rem;
 }
@@ -99,8 +101,8 @@ body {
     margin-left: 0.5rem;
     margin-top: 0.5rem;
     margin-bottom: 0.5rem;
-    background-color: #3B404B;
-    border: 2px solid #455766;
+    background-color: var(--main-bg-color);
+    border: 2px solid var(--border-color);
 }
 
 .filetree {
@@ -127,12 +129,12 @@ body {
     background-color: var(--strong-bg-color);
 }
 
-.rootfolder-link>.folder-name {
+.rootfolder-link > .folder-name {
     margin-left: 0.5rem;
     flex-grow: 1;
 }
 
-.rootfolder-link>.folder-expand {
+.rootfolder-link > .folder-expand {
     margin-right: 1rem;
 }
 
@@ -179,15 +181,15 @@ body {
 .codearea {
     flex-grow: 1;
     margin-bottom: 0.5rem;
-    border: 2px solid #455766;
+    border: 2px solid var(--border-color);
     display: flex;
     margin-right: 0.5rem;
 }
 
 .output {
     width: 30%;
-    background-color: #3B404B;
-    border: 2px solid #455766;
+    background-color: var(--main-bg-color);
+    border: 2px solid var(--border-color);
     margin-bottom: 0.5rem;
     padding: 0.5rem;
     display: flex;
@@ -197,13 +199,13 @@ body {
 .output-terminal {
     height: 100%;
     width: 100%;
-    background-color: #22252E;
+    background-color: var(--strong-bg-color);
     margin-top: 0.5rem;
 }
 
 .editor-header {
-    background-color: #3B404B;
-    border: 2px solid #455766;
+    background-color: var(--main-bg-color);
+    border: 2px solid var(--border-color);
     margin-top: 0.5rem;
     margin-bottom: 0.5rem;
     height: 3rem;
@@ -239,7 +241,13 @@ body {
     padding-bottom: 0.6rem;
 }
 
-.btn>img {
+.btn.small {
+    background-image: url("/images/button-small.png");
+    width: 2.2rem;
+    height: 2rem;
+}
+
+.btn > img {
     margin-right: 0.5rem;
 }
 
@@ -248,7 +256,12 @@ body {
     padding-bottom: 0.2rem;
 }
 
-.view-lines, .line-numbers {
+.btn.small:active {
+    background-image: url("/images/button-small-clicked.png");
+}
+
+.view-lines,
+.line-numbers {
     font-family: "PixelCode" !important;
 }
 
@@ -267,4 +280,49 @@ body {
 .info-text {
     text-align: center;
     margin-bottom: 1.5rem;
+}
+
+.modal {
+    background-color: var(--strong-bg-color);
+    border: 2px solid var(--border-color);
+    outline: 2px solid black;
+    padding: 2rem;
+    color: white;
+}
+
+dialog::backdrop {
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.new-project-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.new-project-form > .btn.small {
+    position: absolute;
+    right: 25px;
+}
+
+.new-project-title {
+    margin: 0;
+    margin-bottom: 2rem;
+}
+
+.input-label {
+    margin-right: 1rem;
+}
+
+.text-input {
+    background-color: var(--main-bg-color);
+    border: 2px solid var(--border-color);
+    font-size: 1rem;
+    font-family: "PixelCode";
+    padding: 0.5rem;
+    color: white;
+}
+
+.name-field {
+    margin-bottom: 2rem;
 }

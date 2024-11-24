@@ -34,32 +34,34 @@
   (r/with-let [expanded-fs? (r/atom false) expanded-ex? (r/atom false)]
     [:div.filesystem [:ul.filetree
                       (when (= show-project true) [:li.rootfolder [:div.rootfolder-link.treelink {:onClick #(swap! expanded-fs? not)}
-                                                                   [:img {:src (if @expanded-fs? "/images/folder-open.png" "images/folder-closed.png")}] [:span.folder-name "Files"] (if @expanded-fs? [:span.folder-expand "▾"] [:span.folder-expand "▸"])]
-                                                   (if @expanded-fs? [:ul.files
-                                                                      [(if (= active-file (:payload_name project))
-                                                                         :li.filelink.active
-                                                                         :li.filelink)
-                                                                       {:onClick #(re-frame/dispatch [::events/set-active-file (:payload_name project)])}
-                                                                       (if (= active-file (:payload_name project))
-                                                                         (str "○ " (:payload_name project))
-                                                                         (:payload_name project))]
-                                                                      [(if (= active-file "config.toml")
-                                                                         :li.filelink.active
-                                                                         :li.filelink)
-                                                                       {:onClick #(re-frame/dispatch [::events/set-active-file "config.toml"])}
-                                                                       (if (= active-file "config.toml")
-                                                                         "○ config.toml"
-                                                                         "config.toml")]] [:span])])
+                                                                   [:img {:src (if @expanded-fs? "/images/folder-open.png" "images/folder-closed.png")}]
+                                                                   [:span.folder-name "Files"] (if @expanded-fs? [:span.folder-expand "▾"] [:span.folder-expand "▸"])]
+                                                   (when @expanded-fs? [:ul.files
+                                                                        [(if (= active-file (:payload_name project))
+                                                                           :li.filelink.active
+                                                                           :li.filelink)
+                                                                         {:onClick #(re-frame/dispatch [::events/set-active-file (:payload_name project)])}
+                                                                         (if (= active-file (:payload_name project))
+                                                                           (str "○ " (:payload_name project))
+                                                                           (:payload_name project))]
+                                                                        [(if (= active-file "config.toml")
+                                                                           :li.filelink.active
+                                                                           :li.filelink)
+                                                                         {:onClick #(re-frame/dispatch [::events/set-active-file "config.toml"])}
+                                                                         (if (= active-file "config.toml")
+                                                                           "○ config.toml"
+                                                                           "config.toml")]])])
                       [:li.rootfolder [:div.rootfolder-link.treelink {:onClick #(swap! expanded-ex? not)}
                                        [:img {:src "/images/examples-icon.png"}] [:span.folder-name "Examples"] (if @expanded-ex? [:span.folder-expand "▾"] [:span.folder-expand "▸"])]
-                       (if @expanded-ex? [:ul.files
-                                          [:li.filelink "reverse-shell"]
-                                          [:li.filelink "youtube"]
-                                          [:li.filelink "paint"]] [:span])]]]))
+                       (when @expanded-ex? [:ul.files
+                                            [:li.filelink "reverse-shell"]
+                                            [:li.filelink "youtube"]
+                                            [:li.filelink "paint"]])]]]))
 
-(defn button [icon text onclick]
-  [:button.btn {:onClick onclick} [:img {:src icon}] [:span text]])
-
+(defn button
+  ([icon text onclick]
+   [:button.btn {:onClick onclick} [:img {:src icon}] [:span text]])
+  ([text onclick] [:button.btn.small {:onClick onclick} [:span text]]))
 
 (defn output []
   [:div.output "Output:" [:div.output-terminal]])
@@ -84,6 +86,18 @@
                                          :options (clj->js {"minimap" {"enabled" false} "automaticLayout" true})}]]
     [output]]])
 
+(defn show-new-project-dialog []
+  (let [dialog (js/document.querySelector ".modal")]
+    (-> dialog .showModal)))
+
+(defn close-new-project-dialog []
+  (let [dialog (js/document.querySelector ".modal")]
+    (-> dialog .close)))
+
+(defn modal [children]
+  [:dialog.modal
+   children])
+
 (defn empty-area []
   [:div.empty-area
    [:div.welcome-text
@@ -100,8 +114,17 @@
     [:div.info-text "Welcome to the IDE for SanScript and SanUSB"]
     [:div.info-text "To get started, create new project or open an existing one"]]
    [:div.project-btns
-    [button "/images/build-icon.png" "New" #(re-frame/dispatch [::events/get-new-project "novi"])]
-    [button "/images/flash-icon.png" "Open" #(re-frame/dispatch [::events/open-dialog])]]])
+    [button "/images/build-icon.png" "New" show-new-project-dialog]
+    [button "/images/flash-icon.png" "Open" #(re-frame/dispatch [::events/open-dialog])]]
+   (r/with-let [project-name (r/atom "")]
+     [modal [:div.new-project-form
+             [button "❌" close-new-project-dialog]
+             [:h3.new-project-title "New project"]
+             [:div.name-field [:label.input-label {:htmlFor "project-name-input"} "Project name"]
+              [:input#project-name-input.text-input {:type "text"
+                                                     :value @project-name
+                                                     :on-change #(reset! project-name (-> % .-target .-value))}]]
+             [button "/images/build-icon.png" "Create" #(re-frame/dispatch [::events/get-new-project @project-name])]]])])
 
 (defn editor []
   (let [show-project (re-frame/subscribe [::subs/show-project])
