@@ -5,7 +5,8 @@
    [sanide-frontend.events :as events]
    [sanide-frontend.subs :as subs]
    [goog.dom :as dom]
-   ["@monaco-editor/react$default" :as Editor]))
+   ["@monaco-editor/react$default" :as Editor]
+   [re-pressed.core :as rp]))
 
 (defn nav-item [name onclick]
   [:button.navitem {:onClick onclick} [:span.item-char (first name)] [:span.item-rest (rest name)]])
@@ -31,28 +32,33 @@
      [tab-item "Simulator" (= @active-item :simulator) #(re-frame/dispatch [::events/set-active-item :simulator])]]))
 
 (defn filesystem ^clj [show-project project active-file]
-  (r/with-let [expanded-fs? (r/atom false) expanded-ex? (r/atom false)]
+  (r/with-let [expanded-fs? (r/atom false) expanded-ex? (r/atom false)
+               latest-payload (re-frame/subscribe [::subs/latest-payload])
+               latest-config (re-frame/subscribe [::subs/latest-config])]
     [:div.filesystem [:ul.filetree
                       (when (= show-project true) [:li.rootfolder [:div.rootfolder-link.treelink {:onClick #(swap! expanded-fs? not)}
                                                                    [:img {:src (if @expanded-fs? "/images/folder-open.png" "images/folder-closed.png")}]
-                                                                   [:span.folder-name "Files"] (if @expanded-fs? [:span.folder-expand "▾"] [:span.folder-expand "▸"])]
+                                                                   [:span.folder-name "Files"]
+                                                                   (if @expanded-fs? [:span.folder-expand "▾"] [:span.folder-expand "▸"])]
                                                    (when @expanded-fs? [:ul.files
                                                                         [(if (= active-file (:payload_name project))
                                                                            :li.filelink.active
                                                                            :li.filelink)
                                                                          {:onClick #(re-frame/dispatch [::events/set-active-file (:payload_name project)])}
                                                                          (if (= active-file (:payload_name project))
-                                                                           (str "○ " (:payload_name project))
+                                                                           (str (if (= @latest-payload (:payload_content project))
+                                                                                  "○ " "● ") (:payload_name project))
                                                                            (:payload_name project))]
                                                                         [(if (= active-file "config.toml")
                                                                            :li.filelink.active
                                                                            :li.filelink)
                                                                          {:onClick #(re-frame/dispatch [::events/set-active-file "config.toml"])}
                                                                          (if (= active-file "config.toml")
-                                                                           "○ config.toml"
+                                                                           (str (if (= @latest-config (:config_content project)) "○ " "● ") "config.toml")
                                                                            "config.toml")]])])
                       [:li.rootfolder [:div.rootfolder-link.treelink {:onClick #(swap! expanded-ex? not)}
-                                       [:img {:src "/images/examples-icon.png"}] [:span.folder-name "Examples"] (if @expanded-ex? [:span.folder-expand "▾"] [:span.folder-expand "▸"])]
+                                       [:img {:src "/images/examples-icon.png"}] [:span.folder-name "Examples"]
+                                       (if @expanded-ex? [:span.folder-expand "▾"] [:span.folder-expand "▸"])]
                        (when @expanded-ex? [:ul.files
                                             [:li.filelink "reverse-shell"]
                                             [:li.filelink "youtube"]
@@ -66,7 +72,7 @@
 (defn output []
   [:div.output "Output:" [:div.output-terminal]])
 
-(defn text-editor [project active-file]
+(defn text-editor [project latest-payload latest-config active-file]
   [:div.text-editor
    [:div.editor-header [:span.filename (str (:project_path project) "/"
                                             (if (= active-file (:payload_name project))
@@ -80,9 +86,12 @@
                               ;; :defaultLanguage "javascript"
                                          :theme "vs-dark"
                                          :value (if (= active-file (:payload_name project))
-                                                  (:payload_content project)
-                                                  (:config_content project))
-                                         :onChange #(print %1)
+                                                  latest-payload
+                                                  latest-config)
+                                         :path (str (:project_path project) "/" active-file)
+                                         :onChange #(if (= active-file  (:payload_name project))
+                                                      (re-frame/dispatch [::events/set-latest-payload %1])
+                                                      (re-frame/dispatch [::events/set-latest-config %1]))
                                          :options (clj->js {"minimap" {"enabled" false} "automaticLayout" true})}]]
     [output]]])
 
@@ -129,17 +138,31 @@
 (defn editor []
   (let [show-project (re-frame/subscribe [::subs/show-project])
         project (re-frame/subscribe [::subs/project])
+        latest-payload (re-frame/subscribe [::subs/latest-payload])
+        latest-config (re-frame/subscribe [::subs/latest-config])
         active-file (re-frame/subscribe [::subs/active-file])]
     (if (= true @show-project)
       [:div.editor
        [filesystem @show-project @project @active-file]
-       [text-editor @project @active-file]]
+       [text-editor @project @latest-payload @latest-config @active-file]]
       [:div.editor
        [filesystem @show-project]
        [empty-area]])))
 
 (defn main-panel []
-  (let [name (re-frame/subscribe [::subs/name]) active-item (re-frame/subscribe [::subs/active-item])]
+  (let [project (re-frame/subscribe [::subs/project]) active-file (re-frame/subscribe [::subs/active-file])
+        latest-payload (re-frame/subscribe [::subs/latest-payload]) latest-config (re-frame/subscribe [::subs/latest-config])]
+    (re-frame/dispatch
+     [::rp/set-keydown-rules
+      {:event-keys [[[::events/save-file {:file_path (str (:project_path @project) "/" @active-file)
+                                          :content (if (= @active-file (:payload_name @project)) @latest-payload @latest-config)}]
+                         ;; enter
+                     [{:keyCode 83
+                       :ctrlKey true}]]]
+
+       :prevent-default-keys [;; ctrl+s
+                              {:keyCode 83
+                               :ctrlKey true}]}])
     [:div
      [navbar]
      [menu]

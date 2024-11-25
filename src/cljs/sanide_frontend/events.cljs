@@ -24,6 +24,16 @@
    (assoc db :active-file val)))
 
 (re-frame/reg-event-db
+ ::set-latest-payload
+ (fn [db [_ val]]
+   (assoc db :latest-payload val)))
+
+(re-frame/reg-event-db
+ ::set-latest-config
+ (fn [db [_ val]]
+   (assoc db :latest-config val)))
+
+(re-frame/reg-event-db
  ::cache-loaded-project
  (fn [_ [_ val]]
    (.setItem js/localStorage "project" (.stringify js/JSON (clj->js val)))))
@@ -48,15 +58,15 @@
 (re-frame/reg-event-fx
  ::open-project-fx
  (fn [cofx [_ result]]
-   {:db (assoc (:db cofx) :project result :show-project true :active-file (:payload_name result))
+   {:db (assoc (:db cofx) :project result :show-project true :active-file (:payload_name result)
+               :latest-payload (:payload_content result) :latest-config (:config_content result))
     :fx [[:dispatch [::cache-loaded-project result]]]}))
 
 (re-frame/reg-event-fx
  ::save-project-fx
  (fn [cofx [_ result]]
    (let [file_name (last (str/split (:file_path result) #"/"))]
-     {:db (update-in (:db cofx) [:project] assoc (if (= file_name "config.toml") :config_content :payload_content) (:content result))
-      :fx [[:dispatch [::cache-loaded-project result]]]})))
+     {:db (update-in (:db cofx) [:project] assoc (if (= file_name "config.toml") :config_content :payload_content) (:content result))})))
 
 (re-frame/reg-event-fx
  ::get-new-project
@@ -90,10 +100,11 @@
 (re-frame/reg-event-fx
  ::save-file
  (fn [_ [_ file]]
+   (print file)
    {:http-xhrio {:method :post
                  :uri (str config/api-url "/fs/save")
-                 :params {:file_path (:file_path file) :content (:content file)}
-                 :request-format (ajax/json-request-format)
+                 :params file
+                 :format (ajax/json-request-format)
                  :response-format (ajax/json-response-format {:keywords? true})
                  :on-success [::save-project-fx]
                  :on-failure [::save-project-failure]}}))

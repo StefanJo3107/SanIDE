@@ -26,3 +26,13 @@
  ::active-file
  (fn [db]
    (:active-file db)))
+
+(re-frame/reg-sub
+ ::latest-payload
+ (fn [db]
+   (:latest-payload db)))
+
+(re-frame/reg-sub
+ ::latest-config
+ (fn [db]
+   (:latest-config db)))
