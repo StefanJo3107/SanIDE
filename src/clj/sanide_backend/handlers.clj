@@ -2,7 +2,8 @@
   (:require [ring.util.http-response :as response]
             [sanide-backend.helpers :as helpers]
             [sanide-backend.config :as config]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [babashka.process :as bb]))
 
 (defn new-project [{{{:keys [project_name]} :query} :parameters}]
   (let [parent-dir-path (helpers/get-file-path (helpers/dir-picker))]
@@ -54,3 +55,9 @@
       (helpers/create-file file_path content)
       (response/ok {:file_path file_path :content content}))
     (response/bad-request)))
+
+(defn build-sanscript [{{{:keys [path]} :query} :parameters}]
+  ())
+
+(defn flash-sanscript [{{{:keys [path]} :query} :parameters}]
+  ())

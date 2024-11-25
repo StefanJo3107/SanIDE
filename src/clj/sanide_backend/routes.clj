@@ -48,7 +48,13 @@
       ["/save" {:post {:summary "Saves content to the desired file"
                        :parameters {:body {:file_path s/Str :content s/Str}}
                        :handler handler/save-file
-                       :responses {200 {:body {:file_path s/Str :content s/Str}}}}}]]
+                       :responses {200 {:body {:file_path s/Str :content s/Str}}}}}]
+      ["/build" {:get {:summary "Compiles provided sanscript project to bytecode"
+                       :handler handler/build-sanscript
+                       :responses {200 {}}}}]
+      ["/flash" {:get {:summary "Flashes provided sanscript project to SanUSB"
+                       :handler handler/flash-sanscript
+                       :responses {200 {}}}}]]
      ["" {:no-doc true}
       ["/swagger.json" {:get {:no-doc  true
                               :swagger
