@@ -4,19 +4,40 @@
    [re-frame.core :as re-frame]
    [sanide-frontend.events :as events]
    [sanide-frontend.subs :as subs]
-   [goog.dom :as dom]
    ["@monaco-editor/react$default" :as Editor]
    [re-pressed.core :as rp]))
 
-(defn nav-item [name onclick]
-  [:button.navitem {:onClick onclick} [:span.item-char (first name)] [:span.item-rest (rest name)]])
+(defn show-new-project-dialog []
+  (let [dialog (js/document.querySelector ".modal")]
+    (-> dialog .showModal)))
+
+(defn close-new-project-dialog []
+  (let [dialog (js/document.querySelector ".modal")]
+    (-> dialog .close)))
+
+(defn nav-menu [actions expanded?]
+  (into [:ul.nav-menu] (map #(vector :li.nav-action {:onClick (fn []  ((:action %) (swap! expanded? not)))} (:name %)) actions)))
+
+(defn nav-item [name actions]
+  (r/with-let [expanded-menu? (r/atom false)]
+    [:div.navitem-container
+     [:button.navitem {:onClick #(swap! expanded-menu? not)} [:span.item-char (first name)] [:span.item-rest (rest name)]]
+     (when @expanded-menu? [nav-menu actions expanded-menu?])]))
 
 (defn navbar []
-  [:nav.navbar>div.container
-   [:div.title-container [:img {:src "/images/san_logo_rounded.png"}] [:span.title "SanIDE"]]
-   [:div.navitems [nav-item "File"]
-    [nav-item "Edit"]
-    [nav-item "Help"]]])
+  (let [project (re-frame/subscribe [::subs/project]) active-file (re-frame/subscribe [::subs/active-file])
+        latest-payload (re-frame/subscribe [::subs/latest-payload]) latest-config (re-frame/subscribe [::subs/latest-config])]
+    [:nav.navbar>div.container
+     [:div.title-container [:img {:src "/images/san_logo_rounded.png"}] [:span.title "SanIDE"]]
+     [:div.navitems [nav-item "File" [{:name "New project" :action show-new-project-dialog}
+                                      {:name "Open project" :action #(re-frame/dispatch [::events/open-dialog])}
+                                      {:name "Save project" :action #(re-frame/dispatch [::events/save-file
+                                                                                         {:file_path (str (:project_path @project) "/" @active-file)
+                                                                                          :content (if (= @active-file (:payload_name @project))
+                                                                                                     @latest-payload @latest-config)}])}
+                                      {:name "Close project" :action #(re-frame/dispatch [::events/close-project])}]]
+      [nav-item "Edit"]
+      [nav-item "Help"]]]))
 
 (defn tab-backgroud [active]
   (if active "/images/tab-active.png" "images/tab-inactive.png"))
@@ -31,10 +52,12 @@
      [tab-item "IRC Client" (= @active-item :irc) #(re-frame/dispatch [::events/set-active-item :irc])]
      [tab-item "Simulator" (= @active-item :simulator) #(re-frame/dispatch [::events/set-active-item :simulator])]]))
 
+
 (defn filesystem ^clj [show-project project active-file]
   (r/with-let [expanded-fs? (r/atom false) expanded-ex? (r/atom false)
                latest-payload (re-frame/subscribe [::subs/latest-payload])
-               latest-config (re-frame/subscribe [::subs/latest-config])]
+               latest-config (re-frame/subscribe [::subs/latest-config])
+               examples (re-frame/subscribe [::subs/examples])]
     [:div.filesystem [:ul.filetree
                       (when (= show-project true) [:li.rootfolder [:div.rootfolder-link.treelink {:onClick #(swap! expanded-fs? not)}
                                                                    [:img {:src (if @expanded-fs? "/images/folder-open.png" "images/folder-closed.png")}]
@@ -59,10 +82,10 @@
                       [:li.rootfolder [:div.rootfolder-link.treelink {:onClick #(swap! expanded-ex? not)}
                                        [:img {:src "/images/examples-icon.png"}] [:span.folder-name "Examples"]
                                        (if @expanded-ex? [:span.folder-expand "▾"] [:span.folder-expand "▸"])]
-                       (when @expanded-ex? [:ul.files
-                                            [:li.filelink "reverse-shell"]
-                                            [:li.filelink "youtube"]
-                                            [:li.filelink "paint"]])]]]))
+                       (when @expanded-ex? (into [:ul.files] (map
+                                                              #(vector :li.filelink
+                                                                       {:onClick (fn [] (re-frame/dispatch [::events/open-example %]))} %)
+                                                              @examples)))]]]))
 
 (defn button
   ([icon text onclick]
@@ -95,14 +118,6 @@
                                          :options (clj->js {"minimap" {"enabled" false} "automaticLayout" true})}]]
     [output]]])
 
-(defn show-new-project-dialog []
-  (let [dialog (js/document.querySelector ".modal")]
-    (-> dialog .showModal)))
-
-(defn close-new-project-dialog []
-  (let [dialog (js/document.querySelector ".modal")]
-    (-> dialog .close)))
-
 (defn modal [children]
   [:dialog.modal
    children])
@@ -124,16 +139,7 @@
     [:div.info-text "To get started, create new project or open an existing one"]]
    [:div.project-btns
     [button "/images/build-icon.png" "New" show-new-project-dialog]
-    [button "/images/flash-icon.png" "Open" #(re-frame/dispatch [::events/open-dialog])]]
-   (r/with-let [project-name (r/atom "")]
-     [modal [:div.new-project-form
-             [button "❌" close-new-project-dialog]
-             [:h3.new-project-title "New project"]
-             [:div.name-field [:label.input-label {:htmlFor "project-name-input"} "Project name"]
-              [:input#project-name-input.text-input {:type "text"
-                                                     :value @project-name
-                                                     :on-change #(reset! project-name (-> % .-target .-value))}]]
-             [button "/images/build-icon.png" "Create" #(re-frame/dispatch [::events/get-new-project @project-name])]]])])
+    [button "/images/flash-icon.png" "Open" #(re-frame/dispatch [::events/open-dialog])]]])
 
 (defn editor []
   (let [show-project (re-frame/subscribe [::subs/show-project])
@@ -166,4 +172,13 @@
     [:div
      [navbar]
      [menu]
-     [editor]]))
+     [editor]
+     (r/with-let [project-name (r/atom "")]
+       [modal [:div.new-project-form
+               [button "❌" close-new-project-dialog]
+               [:h3.new-project-title "New project"]
+               [:div.name-field [:label.input-label {:htmlFor "project-name-input"} "Project name"]
+                [:input#project-name-input.text-input {:type "text"
+                                                       :value @project-name
+                                                       :on-change #(reset! project-name (-> % .-target .-value))}]]
+               [button "/images/build-icon.png" "Create" #(re-frame/dispatch [::events/get-new-project @project-name])]]])]))

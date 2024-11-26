@@ -3,11 +3,6 @@
    [re-frame.core :as re-frame]))
 
 (re-frame/reg-sub
- ::name
- (fn [db]
-   (:name db)))
-
-(re-frame/reg-sub
  ::active-item
  (fn [db]
    (:active-item db)))
@@ -36,3 +31,8 @@
  ::latest-config
  (fn [db]
    (:latest-config db)))
+
+(re-frame/reg-sub
+ ::examples
+ (fn [db]
+   (:examples db)))

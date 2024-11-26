@@ -53,8 +53,28 @@
  (fn [db [_ fail]]
    (assoc db :save-project-failure fail)))
 
+(re-frame/reg-event-db
+ ::get-examples-result
+ (fn [db [_ result]]
+   (assoc db :examples result)))
+
+(re-frame/reg-event-db
+ ::get-examples-failure
+ (fn [db [_ fail]]
+   (assoc db :get-examples-failure fail)))
+
+(re-frame/reg-event-db
+ ::open-example-failure
+ (fn [db [_ fail]]
+   (assoc db :open-example-failure fail)))
 
 ;; reg-event-fx
+(re-frame/reg-event-fx
+ ::close-project
+ [(re-frame/inject-cofx ::remove-cached-project)]
+ (fn [cofx [_ _]]
+   {:db (assoc (:db cofx) :show-project false :project nil)}))
+
 (re-frame/reg-event-fx
  ::open-project-fx
  (fn [cofx [_ result]]
@@ -66,7 +86,8 @@
  ::save-project-fx
  (fn [cofx [_ result]]
    (let [file_name (last (str/split (:file_path result) #"/"))]
-     {:db (update-in (:db cofx) [:project] assoc (if (= file_name "config.toml") :config_content :payload_content) (:content result))})))
+     {:db (update-in (:db cofx) [:project] assoc
+                     (if (= file_name "config.toml") :config_content :payload_content) (:content result))})))
 
 (re-frame/reg-event-fx
  ::get-new-project
@@ -100,7 +121,6 @@
 (re-frame/reg-event-fx
  ::save-file
  (fn [_ [_ file]]
-   (print file)
    {:http-xhrio {:method :post
                  :uri (str config/api-url "/fs/save")
                  :params file
@@ -108,3 +128,28 @@
                  :response-format (ajax/json-response-format {:keywords? true})
                  :on-success [::save-project-fx]
                  :on-failure [::save-project-failure]}}))
+
+(re-frame/reg-event-fx
+ ::get-examples
+ (fn [_ [_ _]]
+   {:http-xhrio {:method :get
+                 :uri (str config/api-url "/fs/get-examples")
+                 :response-format (ajax/json-response-format {:keywords? true})
+                 :on-success [::get-examples-result]
+                 :on-failure [::get-examples-failure]}}))
+
+(re-frame/reg-event-fx
+ ::open-example
+ (fn [_ [_ example_name]]
+   {:http-xhrio {:method :get
+                 :uri (str config/api-url "/fs/open-example")
+                 :params {:example_name example_name}
+                 :response-format (ajax/json-response-format {:keywords? true})
+                 :on-success [::open-project-fx]
+                 :on-failure [::open-example-failure]}}))
+
+;cofx
+(re-frame/reg-cofx
+ ::remove-cached-project
+ (fn [_ _]
+   (.removeItem js/localStorage "project")))

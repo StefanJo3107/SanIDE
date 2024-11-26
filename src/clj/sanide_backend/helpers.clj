@@ -47,6 +47,3 @@
 
 (defn file-exists? [file-path]
   (.exists (java.io.File. file-path)))
-
-(defn get-storage-val [key]
-  ())
