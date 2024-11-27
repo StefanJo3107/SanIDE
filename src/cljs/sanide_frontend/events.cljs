@@ -34,6 +34,21 @@
    (assoc db :latest-config val)))
 
 (re-frame/reg-event-db
+ ::set-server-address
+ (fn [db [_ val]]
+   (assoc db :server-address val)))
+
+(re-frame/reg-event-db
+ ::set-username
+ (fn [db [_ val]]
+   (assoc db :username val)))
+
+(re-frame/reg-event-db
+ ::set-channel
+ (fn [db [_ val]]
+   (assoc db :channel val)))
+
+(re-frame/reg-event-db
  ::cache-loaded-project
  (fn [_ [_ val]]
    (.setItem js/localStorage "project" (.stringify js/JSON (clj->js val)))))

@@ -7,6 +7,12 @@
    ["@monaco-editor/react$default" :as Editor]
    [re-pressed.core :as rp]))
 
+(defn text-input
+  ([input-id label-text input-value]
+   [:div.text-field [:label.input-label {:htmlFor input-id} label-text]
+    [:input.text-input {:type "text" :value @input-value :id input-id
+                        :on-change #(reset! input-value (-> % .-target .-value))}]]))
+
 (defn show-new-project-dialog []
   (let [dialog (js/document.querySelector ".modal")]
     (-> dialog .showModal)))
@@ -155,14 +161,29 @@
        [filesystem @show-project]
        [empty-area]])))
 
+(defn irc-menu []
+  (r/with-let [server-address (r/atom "") username (r/atom "") channel (r/atom "")]
+    [:div.irc-menu
+     [:div.join-form
+      [:h3.join-server-title "Join server"]
+      [text-input "irc-server-address" "Server address" server-address]
+      [text-input "irc-username" "Username" username]
+      [text-input "irc-username" "Channel" channel]
+      [button "/images/build-icon.png" "Join" #()]]]))
+
+(defn irc []
+  [:div.irc-container
+   [irc-menu]])
+
 (defn main-panel []
-  (let [project (re-frame/subscribe [::subs/project]) active-file (re-frame/subscribe [::subs/active-file])
-        latest-payload (re-frame/subscribe [::subs/latest-payload]) latest-config (re-frame/subscribe [::subs/latest-config])]
+  (let [active-item (re-frame/subscribe [::subs/active-item]) project (re-frame/subscribe [::subs/project])
+        active-file (re-frame/subscribe [::subs/active-file]) latest-payload (re-frame/subscribe [::subs/latest-payload])
+        latest-config (re-frame/subscribe [::subs/latest-config])]
     (re-frame/dispatch
      [::rp/set-keydown-rules
       {:event-keys [[[::events/save-file {:file_path (str (:project_path @project) "/" @active-file)
                                           :content (if (= @active-file (:payload_name @project)) @latest-payload @latest-config)}]
-                         ;; enter
+                         ;; ctrl+s
                      [{:keyCode 83
                        :ctrlKey true}]]]
 
@@ -172,13 +193,12 @@
     [:div
      [navbar]
      [menu]
-     [editor]
+     (case @active-item
+       :editor [editor]
+       :irc [irc])
      (r/with-let [project-name (r/atom "")]
        [modal [:div.new-project-form
                [button "❌" close-new-project-dialog]
                [:h3.new-project-title "New project"]
-               [:div.name-field [:label.input-label {:htmlFor "project-name-input"} "Project name"]
-                [:input#project-name-input.text-input {:type "text"
-                                                       :value @project-name
-                                                       :on-change #(reset! project-name (-> % .-target .-value))}]]
+               [text-input "project-name-input" "Project name" project-name]
                [button "/images/build-icon.png" "Create" #(re-frame/dispatch [::events/get-new-project @project-name])]]])]))
