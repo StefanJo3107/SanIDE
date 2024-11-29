@@ -29,3 +29,5 @@
                                                              :content "print \"Hello World\""}))
                                         :parameters {:body {:file_path (str tmp-proj "/tmp.san")
                                                             :content "print \"Hello World\""}}))))))
+
+(t/run-tests)

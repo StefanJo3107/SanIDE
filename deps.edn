@@ -28,7 +28,6 @@
                   :extra-deps {lambdaisland/kaocha {:mvn/version "1.66.1034"}
                                lambdaisland/kaocha-cloverage {:mvn/version "1.0.75"}
                                day8.re-frame/test {:mvn/version "0.1.5"}
-                               midje/midje {:mvn/version "1.10.10"}
                                ring/ring-mock {:mvn/version "0.4.0"}
                                com.magnars/test-with-files {:mvn/version "2021-02-17"}}
                   :main-opts ["-m" "kaocha.runner"]}
@@ -44,4 +43,6 @@
             :extra-deps {binaryage/devtools {:mvn/version "1.0.6"}}}
 
            :api {:main-opts ["-m" "sanide-backend.core"]}
-           :repl {:main-opts ["-m" "nrepl.cmdline" "--port" "7888"]}}}
+           :repl {:extra-deps {ring/ring-mock {:mvn/version "0.4.0"}
+                               com.magnars/test-with-files {:mvn/version "2021-02-17"}}
+                  :main-opts ["-m" "nrepl.cmdline" "--port" "7888"]}}}
