@@ -17,4 +17,15 @@
                    :project_path tmp-proj}
             :headers {}}
            (handlers/open-at-path (assoc (mock/request :get (str "/fs/open-path?path=" tmp-proj)) :parameters
-                                         {:query {:path tmp-proj}}))))))
+                                         {:query {:path tmp-proj}})))))
+  (twf/with-files tmp-proj ["tmp.san" "print \"Hello\""
+                            "config.toml" "mode=\"auto\""]
+    (is (= {:status 200
+            :body {:file_path (str tmp-proj "/tmp.san")
+                   :content "print \"Hello World\""}
+            :headers {}}
+           (handlers/save-file (assoc (-> (mock/request :post "/fs/save")
+                                          (mock/json-body {:file_path (str tmp-proj "/tmp.san")
+                                                           :content "print \"Hello World\""}))
+                                      :parameters {:body {:file_path (str tmp-proj "/tmp.san")
+                                                          :content "print \"Hello World\""}}))))))
