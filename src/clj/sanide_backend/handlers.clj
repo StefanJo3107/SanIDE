@@ -5,6 +5,7 @@
             [taoensso.timbre :as log]
             [babashka.process :as bb]))
 
+;; TODO convert to clojure.java.io.file
 (defn new-project [{{{:keys [project_name]} :query} :parameters}]
   (let [parent-dir-path (helpers/get-file-path (helpers/dir-picker))]
     (helpers/create-project parent-dir-path project_name)
@@ -23,6 +24,7 @@
                     :config_content (helpers/read-file-content dir "config.toml")})
       (response/bad-request))))
 
+;; TODO convert to clojure.java.io.file
 (defn get-examples [_]
   (let [examples (reduce #(if (helpers/is-san-project? (java.io.File. (str config/examples_path "/" %2)))
                             (conj %1 %2)
@@ -31,6 +33,7 @@
                          (helpers/get-filenames (java.io.File. config/examples_path)))]
     (response/ok examples)))
 
+;; TODO convert to clojure.java.io.file
 (defn open-example [{{{:keys [example_name]} :query} :parameters}]
   (let [example-dir-path (str config/examples_path "/" example_name) example-dir (java.io.File. example-dir-path)]
     (if (helpers/is-san-project? example-dir)
@@ -40,6 +43,7 @@
                     :config_content (helpers/read-file-content example-dir "config.toml")})
       (response/bad-request))))
 
+;; TODO convert to clojure.java.io.file
 (defn open-at-path [{{{:keys [path]} :query} :parameters}]
   (let [dir (java.io.File. path)]
     (if (helpers/is-san-project? dir)

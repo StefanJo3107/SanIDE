@@ -24,10 +24,13 @@
  :mvn/repos {"central" {:url "https://repo1.maven.org/maven2/"}
              "clojars" {:url "https://repo.clojars.org/"}}
 
- :aliases {:test {:extra-paths ["src/test"]
+ :aliases {:test {:extra-paths ["test/clj"]
                   :extra-deps {lambdaisland/kaocha {:mvn/version "1.66.1034"}
                                lambdaisland/kaocha-cloverage {:mvn/version "1.0.75"}
-                               day8.re-frame/test {:mvn/version "0.1.5"}}
+                               day8.re-frame/test {:mvn/version "0.1.5"}
+                               midje/midje {:mvn/version "1.10.10"}
+                               ring/ring-mock {:mvn/version "0.4.0"}
+                               com.magnars/test-with-files {:mvn/version "2021-02-17"}}
                   :main-opts ["-m" "kaocha.runner"]}
 
            :clj-kondo

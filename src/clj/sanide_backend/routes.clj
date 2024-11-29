@@ -29,7 +29,7 @@
                                                      :payload_content s/Str
                                                      :payload_name s/Str
                                                      :config_content s/Str}}}}}]
-      ["/open-path" {:get {:summary "Opens file dialog for project selection"
+      ["/open-path" {:get {:summary "Opens project at desired path"
                            :handler handler/open-at-path
                            :parameters {:query {:path s/Str}}
                            :responses {200 {:body {:project_path s/Str
