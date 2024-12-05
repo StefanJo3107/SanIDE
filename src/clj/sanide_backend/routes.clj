@@ -15,7 +15,9 @@
   []
   (ring/ring-handler
    (ring/router
-    [["/fs"
+    [["/ws" {:get {:summary "Initiates websocket connection for IRC client"
+                   :handler handler/websocket-handler}}]
+     ["/fs"
       ["/new" {:get {:summary "Creates new sanscript project"
                      :parameters {:query {:project_name s/Str}}
                      :handler handler/new-project

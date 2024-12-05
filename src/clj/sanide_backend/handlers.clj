@@ -2,8 +2,11 @@
   (:require [ring.util.http-response :as response]
             [sanide-backend.helpers :as helpers]
             [sanide-backend.config :as config]
+            [sanide-backend.irc-client :as irc]
+            [org.httpkit.server :as hk]
             [taoensso.timbre :as log]
-            [babashka.process :as bb]))
+            [babashka.process :as bb]
+            [clojure.data.json :as json]))
 
 ;; TODO convert to clojure.java.io.file
 (defn new-project [{{{:keys [project_name]} :query} :parameters}]
@@ -65,3 +68,25 @@
 
 (defn flash-sanscript [{{{:keys [path]} :query} :parameters}]
   ())
+
+(def channels (atom #{}))
+
+(defn websocket-on-open [ch]
+  (swap! channels conj ch))
+
+(defn websocket-on-close [ch _]
+  (swap! channels disj ch))
+
+(defn websocket-on-receive [ch message]
+  (let [message-json (json/read-str message :key-fn keyword)]
+    (log/info message-json)
+    (case (:type message-json)
+      "connect" (irc/init ch (:server message-json) (:port message-json) (:username message-json) (:channel message-json))
+      "get-participants" (irc/participants (:channel message))
+      "send-message" (irc/privmsg (:msg message)))))
+
+(defn websocket-handler [req]
+  (hk/as-channel req
+                 {:on-open websocket-on-open
+                  :on-close websocket-on-close
+                  :on-receive websocket-on-receive}))
