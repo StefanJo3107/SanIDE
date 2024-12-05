@@ -1,11 +1,8 @@
-(ns sanide-frontend.irc-client
+(ns sanide-backend.irc-client
   (:require [clojure.core :as c])
   (:import [java.net Socket]
            [java.lang Thread]
            [java.io PrintWriter InputStreamReader BufferedReader]))
-
-(def irc-host {:name "irc.libera.chat" :port 6667})
-(def user {:name "test11223344" :nick "test11223344"})
 
 (declare conn-handler)
 
@@ -48,9 +45,7 @@
 (defn privmsg [conn channel msg]
   (write conn (str "PRIVMSG " channel " :" msg)))
 
-(defn irc-example []
-  (let [irc (connect irc-host)]
+(defn init [server user channel]
+  (let [irc (connect server)]
     (login irc user)
-    (write irc "JOIN #clojure-test")))
-
-(irc-example)
+    (join-channel irc channel)))

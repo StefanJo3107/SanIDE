@@ -162,7 +162,7 @@
        [empty-area]])))
 
 (defn irc-menu []
-  (r/with-let [server-address (r/atom "") username (r/atom "") channel (r/atom "")]
+  (r/with-let [server-address (r/atom "") username (r/atom "") channel (r/atom "") port (r/atom 6667)]
     [:div.irc-menu
      [:div.join-form
       [:h3.join-server-title "Join server"]
