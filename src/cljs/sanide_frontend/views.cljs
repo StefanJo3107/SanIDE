@@ -171,9 +171,21 @@
       [text-input "irc-username" "Channel" channel]
       [button "/images/build-icon.png" "Join" #()]]]))
 
+(defn irc-chat []
+  (r/with-let [message (r/atom "")]
+    [:div.irc-chat-container
+     [:div.irc-chat
+      [:fieldset.irc-chat-area
+       [:legend "Chat"]]
+      [:div.irc-message-field
+       [:input.text-input {:type "text" :value @message :id "irc-message" :placeholder "Message..."
+                           :on-change #(reset! message (-> % .-target .-value))}]]]
+     [:fieldset.irc-recipients
+      [:legend "Participants"]]]))
+
 (defn irc []
   [:div.irc-container
-   [irc-menu]])
+   [irc-chat]])
 
 (defn main-panel []
   (let [active-item (re-frame/subscribe [::subs/active-item]) project (re-frame/subscribe [::subs/project])

@@ -39,6 +39,11 @@
    (assoc db :server-address val)))
 
 (re-frame/reg-event-db
+ ::set-server-port
+ (fn [db [_ val]]
+   (assoc db :server-port val)))
+
+(re-frame/reg-event-db
  ::set-username
  (fn [db [_ val]]
    (assoc db :username val)))
@@ -47,6 +52,16 @@
  ::set-channel
  (fn [db [_ val]]
    (assoc db :channel val)))
+
+(re-frame/reg-event-db
+ ::add-message
+ (fn [db [_ val]]
+   (update db :messages conj val)))
+
+(re-frame/reg-event-db
+ ::set-participants
+ (fn [db [_ val]]
+   (assoc db :participants val)))
 
 (re-frame/reg-event-db
  ::cache-loaded-project

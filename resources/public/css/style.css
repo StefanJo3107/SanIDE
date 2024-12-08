@@ -384,5 +384,45 @@ dialog::backdrop {
     flex-direction: column;
     align-items: center;
     padding: 1rem;
-    box-shadow: 10px 10px 0px 1px rgba(0,0,0,0.75);
+    box-shadow: 10px 10px 0px 1px rgba(0, 0, 0, 0.75);
+}
+
+.irc-chat-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+}
+
+.irc-chat {
+    width: 90%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+}
+
+.irc-chat-area {
+    background-color: var(--main-bg-color);
+    height: 100%;
+    border: 2px solid var(--border-color);
+}
+
+.irc-message-field {
+    background-color: var(--main-bg-color);
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+}
+
+.irc-recipients {
+    background-color: var(--main-bg-color);
+    min-width: 15vw;
+    margin-bottom: 0.5rem;
+    margin-right: 0.5rem;
+    border: 2px solid var(--border-color);
+}
+
+#irc-message {
+    width: 100%;
 }
