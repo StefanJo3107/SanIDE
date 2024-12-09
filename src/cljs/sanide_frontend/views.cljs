@@ -5,7 +5,8 @@
    [sanide-frontend.events :as events]
    [sanide-frontend.subs :as subs]
    ["@monaco-editor/react$default" :as Editor]
-   [re-pressed.core :as rp]))
+   [re-pressed.core :as rp]
+   [sanide-frontend.websocket :as ws]))
 
 (defn text-input
   ([input-id label-text input-value]
@@ -162,14 +163,15 @@
        [empty-area]])))
 
 (defn irc-menu []
-  (r/with-let [server-address (r/atom "") username (r/atom "") channel (r/atom "") port (r/atom 6667)]
+  (r/with-let [server-address (r/atom "") server-port (r/atom "") username (r/atom "") channel (r/atom "") port (r/atom 6667)]
     [:div.irc-menu
      [:div.join-form
       [:h3.join-server-title "Join server"]
       [text-input "irc-server-address" "Server address" server-address]
+      [text-input "irc-server-port" "Server port" server-port]
       [text-input "irc-username" "Username" username]
       [text-input "irc-username" "Channel" channel]
-      [button "/images/build-icon.png" "Join" #()]]]))
+      [button "/images/build-icon.png" "Join" #(ws/connect-to-irc @server-address @server-port @username @channel)]]]))
 
 (defn irc-chat []
   (r/with-let [message (r/atom "")]
@@ -184,8 +186,9 @@
       [:legend "Participants"]]]))
 
 (defn irc []
-  [:div.irc-container
-   [irc-chat]])
+  (let [irc-connected (re-frame/subscribe [::subs/irc-connected])]
+    [:div.irc-container
+     (if (= irc-connected true) [irc-chat] [irc-menu])]))
 
 (defn main-panel []
   (let [active-item (re-frame/subscribe [::subs/active-item]) project (re-frame/subscribe [::subs/project])

@@ -55,13 +55,19 @@
 
 (re-frame/reg-event-db
  ::add-message
- (fn [db [_ val]]
+ (fn [db vals]
+   (println vals)
    (update db :messages conj val)))
 
 (re-frame/reg-event-db
  ::set-participants
  (fn [db [_ val]]
    (assoc db :participants val)))
+
+(re-frame/reg-event-db
+ ::set-irc-connected
+ (fn [db [_ val]]
+   (assoc db :irc-connected val)))
 
 (re-frame/reg-event-db
  ::cache-loaded-project

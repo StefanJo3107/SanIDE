@@ -2,4 +2,5 @@
 
 (def default-db
   {:active-item :editor
-   :show-project false})
+   :show-project false
+   :irc-connected false})

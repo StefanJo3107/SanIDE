@@ -1,6 +1,7 @@
 (ns sanide-backend.irc-client
   (:require [clojure.core :as c]
-            [org.httpkit.server :as hk])
+            [org.httpkit.server :as hk]
+            [clojure.data.json :as json])
   (:import [java.net Socket]
            [java.lang Thread]
            [java.io PrintWriter InputStreamReader BufferedReader]))
@@ -32,7 +33,9 @@
       (cond
         (re-find #"^ERROR :Closing Link:" msg) (c/dosync (c/alter irc-conn merge {:exit true}))
         (re-find #"^PING" msg) (pong msg)
-        :else (hk/send! ws-channel msg)))))
+        :else (hk/send! ws-channel (json/write-str {:id    "message-subscription"
+                                                    :proto :subscription
+                                                    :data  {:msg msg}}))))))
 
 (defn login [user]
   (write (str "NICK " user))

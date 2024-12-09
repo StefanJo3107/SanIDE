@@ -36,3 +36,8 @@
  ::examples
  (fn [db]
    (:examples db)))
+
+(re-frame/reg-sub
+ ::irc-connected
+ (fn [db]
+   (:irc-connected db)))

@@ -78,12 +78,13 @@
   (swap! channels disj ch))
 
 (defn websocket-on-receive [ch message]
-  (let [message-json (json/read-str message :key-fn keyword)]
+  (let [message-json (:data (json/read-str message :key-fn keyword))]
     (log/info message-json)
     (case (:type message-json)
       "connect" (irc/init ch (:server message-json) (:port message-json) (:username message-json) (:channel message-json))
       "get-participants" (irc/participants (:channel message))
-      "send-message" (irc/privmsg (:msg message)))))
+      "send-message" (irc/privmsg (:msg message))
+      (log/info "No matching clause"))))
 
 (defn websocket-handler [req]
   (hk/as-channel req
