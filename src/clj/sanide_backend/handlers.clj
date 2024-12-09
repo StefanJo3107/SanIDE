@@ -78,7 +78,7 @@
   (swap! channels disj ch))
 
 (defn websocket-on-receive [ch message]
-  (let [message-json (:data (json/read-str message :key-fn keyword))]
+  (let [message-json (json/read-str message :key-fn keyword)]
     (log/info message-json)
     (case (:type message-json)
       "connect" (irc/init ch (:server message-json) (:port message-json) (:username message-json) (:channel message-json))

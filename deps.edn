@@ -41,7 +41,7 @@
            {:main-opts ["-m" "shadow.cljs.devtools.cli"
                         "watch" ":app"]
             :extra-deps {binaryage/devtools {:mvn/version "1.0.6"}
-                         org.clojars.rutledgepaulv/websocket-fx {:mvn/version "0.1.2"}}}
+                         nilenso/wscljs {:mvn/version "0.2.0"}}}
 
            :api {:main-opts ["-m" "sanide-backend.core"]}
            :repl {:extra-deps {ring/ring-mock {:mvn/version "0.4.0"}

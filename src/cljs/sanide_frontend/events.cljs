@@ -5,7 +5,9 @@
    [sanide-frontend.config :as config]
    [day8.re-frame.http-fx]
    [ajax.core :as ajax]
-   [clojure.string :as str]))
+   [clojure.string :as str]
+   [wscljs.client :as ws]
+   [wscljs.format :as fmt]))
 
 ;; reg-event-db
 (re-frame/reg-event-db
@@ -189,3 +191,42 @@
  ::remove-cached-project
  (fn [_ _]
    (.removeItem js/localStorage "project")))
+
+;; websockets
+(defn irc-msg-handler
+  [msg]
+  (println (.-data msg)))
+
+(re-frame/reg-cofx
+ ::ws-connect-cofx
+ (fn [cfx {socket-id :socket-id url :url}]
+   (assoc cfx socket-id (ws/create url
+                                   {:on-message irc-msg-handler
+                                    :on-open #(println "Opening new ws connection")
+                                    :on-close #(println "Closing ws connection")}))))
+
+(re-frame/reg-event-fx
+ ::ws-connect
+ [(re-frame/inject-cofx ::ws-connect-cofx {:socket-id :irc-socket :url config/ws-url})]
+ (fn [cofx _]
+   {:db (assoc (:db cofx) :ws-socket (:ws-socket cofx))}))
+
+(re-frame/reg-fx
+ ::irc-connect-fx
+ (fn [options]
+   (ws/send (:socket options)
+            {:type "connect"
+             :server (:server options)
+             :port (:port options)
+             :username (:username options)
+             :channel (:channel options)}
+            fmt/json)))
+
+(re-frame/reg-event-fx
+ ::irc-connect
+ (fn [cofx [_ vals]]
+   {::irc-connect-fx {:socket (get-in cofx [:db :ws-socket])
+                      :server (:server vals)
+                      :port (:port vals)
+                      :username (:username vals)
+                      :channel (:channel vals)}}))

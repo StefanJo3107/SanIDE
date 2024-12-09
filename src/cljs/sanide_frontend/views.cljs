@@ -5,8 +5,7 @@
    [sanide-frontend.events :as events]
    [sanide-frontend.subs :as subs]
    ["@monaco-editor/react$default" :as Editor]
-   [re-pressed.core :as rp]
-   [sanide-frontend.websocket :as ws]))
+   [re-pressed.core :as rp]))
 
 (defn text-input
   ([input-id label-text input-value]
@@ -171,11 +170,14 @@
       [text-input "irc-server-port" "Server port" server-port]
       [text-input "irc-username" "Username" username]
       [text-input "irc-username" "Channel" channel]
-      [button "/images/build-icon.png" "Join" #(ws/connect-to-irc @server-address @server-port @username @channel)]]]))
+      [button "/images/build-icon.png" "Join" #(re-frame/dispatch [::events/irc-connect {:server @server-address
+                                                                                         :port (int @server-port)
+                                                                                         :username @username
+                                                                                         :channel @channel}])]]]))
 
 (defn irc-chat []
   (r/with-let [message (r/atom "")]
-    [:div.irc-chat-container
+    [:div.irc-chat-container 
      [:div.irc-chat
       [:fieldset.irc-chat-area
        [:legend "Chat"]]
