@@ -58,13 +58,13 @@
 (re-frame/reg-event-db
  ::add-message
  (fn [db vals]
-   (println vals)
+   (println (str "Msg: " vals))
    (update db :messages conj val)))
 
 (re-frame/reg-event-db
- ::set-participants
+ ::add-participant
  (fn [db [_ val]]
-   (assoc db :participants val)))
+   (update db :participants conj val)))
 
 (re-frame/reg-event-db
  ::set-irc-connected
@@ -195,7 +195,15 @@
 ;; websockets
 (defn irc-msg-handler
   [msg]
-  (println (.-data msg)))
+  (let [msgsplit (str/split (.-data msg) " ")]
+    (case (second msgsplit)
+      "001" (re-frame/dispatch [::set-irc-connected true])
+      "372" (re-frame/dispatch [::add-message {:from "#channel" :type "MOTD" :msg (str/join " " (subvec msgsplit 5))}])
+      "JOIN" (do
+               (re-frame/dispatch [::add-participant (subs (str/split (first msgsplit) "!") 1)])
+               (re-frame/dispatch [::add-message {:from "#channel" :type "JOIN" :msg (str "JOIN " (last msgsplit))}]))
+      "PRIVMSG" (re-frame/dispatch [::add-message {:from (subs (str/split (first msgsplit) "!") 1)
+                                                   :type "PRIVMSG" :msg (str/join " " (subvec msgsplit 3))}]))))
 
 (re-frame/reg-cofx
  ::ws-connect-cofx
