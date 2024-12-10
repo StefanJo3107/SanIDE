@@ -191,6 +191,13 @@
  (fn [_ _]
    (.removeItem js/localStorage "project")))
 
+
+(defn current-time []
+  (let [now (js/Date.)
+        hour (.getHours now)
+        minute (.getMinutes now)]
+    (str hour ":" minute)))
+
 ;; websockets
 (defn irc-msg-handler
   [msg]
@@ -198,11 +205,12 @@
   (let [msgsplit (str/split (.-data msg) #" ") msglen (count msgsplit)]
     (case (second msgsplit)
       "001" (re-frame/dispatch [::set-irc-connected true])
-      "372" (re-frame/dispatch [::add-message {:from "#channel" :type "MOTD"
+      "372" (re-frame/dispatch [::add-message {:from "#channel" :type "MOTD" :time (current-time)
                                                :msg (if (> msglen 4) (str/join " " (subvec msgsplit 4 msglen)) "\n")}])
       "JOIN" (do
                (re-frame/dispatch [::add-participant (subs (first (str/split (first msgsplit) #"!")) 1)])
-               (re-frame/dispatch [::add-message {:from "#channel" :type "JOIN" :msg (str "JOIN " (last msgsplit))}]))
+               (re-frame/dispatch [::add-message {:from "#channel" :type "JOIN" :time (current-time)
+                                                  :msg (str "JOIN " (last msgsplit))}]))
       "PRIVMSG" (re-frame/dispatch [::add-message {:from (subs (str/split (first msgsplit) #"!") 1)
                                                    :type "PRIVMSG" :msg (str/join " " (subvec msgsplit 3))}])
       ())))

@@ -175,6 +175,10 @@
                                                                                          :username @username
                                                                                          :channel @channel}])]]]))
 
+(defn irc-message [msg]
+  [:div.irc-message
+   ])
+
 (defn irc-chat []
   (r/with-let [message (r/atom "")]
     [:div.irc-chat-container
