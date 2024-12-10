@@ -177,7 +177,7 @@
 
 (defn irc-chat []
   (r/with-let [message (r/atom "")]
-    [:div.irc-chat-container 
+    [:div.irc-chat-container
      [:div.irc-chat
       [:fieldset.irc-chat-area
        [:legend "Chat"]]
@@ -190,7 +190,7 @@
 (defn irc []
   (let [irc-connected (re-frame/subscribe [::subs/irc-connected])]
     [:div.irc-container
-     (if (= irc-connected true) [irc-chat] [irc-menu])]))
+     (if (= @irc-connected true) [irc-chat] [irc-menu])]))
 
 (defn main-panel []
   (let [active-item (re-frame/subscribe [::subs/active-item]) project (re-frame/subscribe [::subs/project])

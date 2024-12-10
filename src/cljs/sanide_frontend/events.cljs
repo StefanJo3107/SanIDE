@@ -57,8 +57,7 @@
 
 (re-frame/reg-event-db
  ::add-message
- (fn [db vals]
-   (println (str "Msg: " vals))
+ (fn [db [_ val]]
    (update db :messages conj val)))
 
 (re-frame/reg-event-db
@@ -195,15 +194,18 @@
 ;; websockets
 (defn irc-msg-handler
   [msg]
-  (let [msgsplit (str/split (.-data msg) " ")]
+  (println (.-data msg))
+  (let [msgsplit (str/split (.-data msg) #" ") msglen (count msgsplit)]
     (case (second msgsplit)
       "001" (re-frame/dispatch [::set-irc-connected true])
-      "372" (re-frame/dispatch [::add-message {:from "#channel" :type "MOTD" :msg (str/join " " (subvec msgsplit 5))}])
+      "372" (re-frame/dispatch [::add-message {:from "#channel" :type "MOTD"
+                                               :msg (if (> msglen 4) (str/join " " (subvec msgsplit 4 msglen)) "\n")}])
       "JOIN" (do
-               (re-frame/dispatch [::add-participant (subs (str/split (first msgsplit) "!") 1)])
+               (re-frame/dispatch [::add-participant (subs (first (str/split (first msgsplit) #"!")) 1)])
                (re-frame/dispatch [::add-message {:from "#channel" :type "JOIN" :msg (str "JOIN " (last msgsplit))}]))
-      "PRIVMSG" (re-frame/dispatch [::add-message {:from (subs (str/split (first msgsplit) "!") 1)
-                                                   :type "PRIVMSG" :msg (str/join " " (subvec msgsplit 3))}]))))
+      "PRIVMSG" (re-frame/dispatch [::add-message {:from (subs (str/split (first msgsplit) #"!") 1)
+                                                   :type "PRIVMSG" :msg (str/join " " (subvec msgsplit 3))}])
+      ())))
 
 (re-frame/reg-cofx
  ::ws-connect-cofx
@@ -217,7 +219,7 @@
  ::ws-connect
  [(re-frame/inject-cofx ::ws-connect-cofx {:socket-id :irc-socket :url config/ws-url})]
  (fn [cofx _]
-   {:db (assoc (:db cofx) :ws-socket (:ws-socket cofx))}))
+   {:db (assoc (:db cofx) :ws-socket (:irc-socket cofx))}))
 
 (re-frame/reg-fx
  ::irc-connect-fx

@@ -33,9 +33,7 @@
       (cond
         (re-find #"^ERROR :Closing Link:" msg) (c/dosync (c/alter irc-conn merge {:exit true}))
         (re-find #"^PING" msg) (pong msg)
-        :else (hk/send! ws-channel (json/write-str {:id    "message-subscription"
-                                                    :proto :subscription
-                                                    :data  {:msg msg}}))))))
+        :else (hk/send! ws-channel msg)))))
 
 (defn login [user]
   (write (str "NICK " user))
