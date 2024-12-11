@@ -175,16 +175,24 @@
                                                                                          :username @username
                                                                                          :channel @channel}])]]]))
 
-(defn irc-message [msg]
-  [:div.irc-message
-   ])
+(defn irc-messages []
+  (let [messages (re-frame/subscribe [::subs/messages])]
+    [:div.irc-messages
+     (map
+      (fn [msg] [:div.irc-message
+                 [:div.irc-msg-meta
+                  (when (not (= (:from msg) "")) [:div.irc-sender (:from msg)])
+                  [:div.irc-time (:time msg)]]
+                 [:div.irc-msg-content (:msg msg)]])
+      @messages)]))
 
 (defn irc-chat []
   (r/with-let [message (r/atom "")]
     [:div.irc-chat-container
      [:div.irc-chat
       [:fieldset.irc-chat-area
-       [:legend "Chat"]]
+       [:legend "Chat"]
+       [irc-messages]]
       [:div.irc-message-field
        [:input.text-input {:type "text" :value @message :id "irc-message" :placeholder "Message..."
                            :on-change #(reset! message (-> % .-target .-value))}]]]

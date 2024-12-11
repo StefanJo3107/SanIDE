@@ -403,6 +403,7 @@ dialog::backdrop {
 }
 
 .irc-chat-area {
+    overflow-y: scroll;
     background-color: var(--main-bg-color);
     height: 100%;
     border: 2px solid var(--border-color);
@@ -425,4 +426,36 @@ dialog::backdrop {
 
 #irc-message {
     width: 100%;
+}
+
+.irc-messages {
+    display: flex;
+    flex-direction: column;
+}
+
+.irc-message {
+    /* width: 100%; */
+    padding: 0.5rem;
+}
+
+.irc-message:nth-child(even) {
+    background-color: var(--strong-bg-color);
+}
+
+.irc-msg-meta {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 0.2rem;
+}
+
+.irc-sender {
+    color: red;
+}
+
+.irc-time {
+    color: rgb(196, 194, 194);
+}
+
+.irc-msg-content {
+    white-space: pre-line;
 }

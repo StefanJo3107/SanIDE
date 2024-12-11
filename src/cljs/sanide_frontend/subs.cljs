@@ -41,3 +41,8 @@
  ::irc-connected
  (fn [db]
    (:irc-connected db)))
+
+(re-frame/reg-sub
+ ::messages
+ (fn [db]
+   (:messages db)))
