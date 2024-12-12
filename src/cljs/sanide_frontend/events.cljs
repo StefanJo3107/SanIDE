@@ -253,4 +253,26 @@
                       :server (:server vals)
                       :port (:port vals)
                       :username (:username vals)
-                      :channel (:channel vals)}}))
+                      :channel (:channel vals)}
+    :fx [[:dispatch [::set-server-address (:server vals)]]
+         [:dispatch [::set-server-port (:port vals)]]
+         [:dispatch [::set-username (:username vals)]]
+         [:dispatch [::set-channel (:channel vals)]]]}))
+
+(re-frame/reg-fx
+ ::irc-send-msg-fx
+ (fn [vals]
+   (ws/send (:socket vals)
+            {:type "send-message"
+             :msg (:msg vals)
+             :channel (:channel vals)}
+            fmt/json)))
+
+(re-frame/reg-event-fx
+ ::irc-send-msg
+ (fn [cofx [_ msg]]
+   {::irc-send-msg-fx {:socket (get-in cofx [:db :ws-socket]) :msg msg
+                       :channel (get-in cofx [:db :channel])}
+    :fx [[:dispatch [::add-message {:from (get-in cofx [:db :username])
+                                    :time (current-time) :type "PRIVMSG"
+                                    :msg msg}]]]}))

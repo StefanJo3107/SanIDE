@@ -193,9 +193,10 @@
       [:fieldset.irc-chat-area
        [:legend "Chat"]
        [irc-messages]]
-      [:div.irc-message-field
+      [:form.irc-message-field {:on-submit #((-> % .preventDefault) (re-frame/dispatch [::events/irc-send-msg @message]))}
        [:input.text-input {:type "text" :value @message :id "irc-message" :placeholder "Message..."
-                           :on-change #(reset! message (-> % .-target .-value))}]]]
+                           :on-change #(reset! message (-> % .-target .-value))}]
+       [:input {:type "submit" :hidden true}]]]
      [:fieldset.irc-recipients
       [:legend "Participants"]]]))
 

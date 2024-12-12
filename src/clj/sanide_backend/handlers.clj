@@ -82,8 +82,8 @@
     (log/info message-json)
     (case (:type message-json)
       "connect" (irc/init ch (:server message-json) (:port message-json) (:username message-json) (:channel message-json))
-      "get-participants" (irc/participants (:channel message))
-      "send-message" (irc/privmsg (:msg message))
+      "get-participants" (irc/participants (:channel message-json))
+      "send-message" (irc/privmsg (:channel message-json) (:msg message-json))
       (log/info "No matching clause"))))
 
 (defn websocket-handler [req]
