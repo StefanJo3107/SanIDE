@@ -66,6 +66,11 @@
        (update db :messages conj val)))))
 
 (re-frame/reg-event-db
+ ::add-participants
+ (fn [db [_ val]]
+   (assoc db :participants (into (:participants db) val))))
+
+(re-frame/reg-event-db
  ::add-participant
  (fn [db [_ val]]
    (update db :participants conj val)))
@@ -212,10 +217,17 @@
       "001" (re-frame/dispatch [::set-irc-connected true])
       "372" (re-frame/dispatch [::add-message {:from "" :type "MOTD" :time (current-time)
                                                :msg (if (> msglen 4) (str/join " " (subvec msgsplit 4 msglen)) " ")}])
+      "353" (when (> msglen 6) (re-frame/dispatch [::add-participants (map #(hash-map
+                                                                             :name (str/replace % ":" "")
+                                                                             :color [(rand-int 360)
+                                                                                     (+ 50 (rand-int 51))
+                                                                                     (+ 50 (rand-int 51))])
+                                                                           (subvec msgsplit 6 msglen))]))
       "JOIN" (do
-               (re-frame/dispatch [::add-participant (subs (first (str/split (first msgsplit) #"!")) 1)])
+               (re-frame/dispatch [::add-participant {:name (subs (first (str/split (first msgsplit) #"!")) 1)
+                                                      :color [(rand-int 360) (+ 50 (rand-int 51)) (+ 50 (rand-int 51))]}])
                (re-frame/dispatch [::add-message {:from "" :type "JOIN" :time (current-time)
-                                                  :msg (str "JOIN " (last msgsplit))}]))
+                                                  :msg (str "➙ JOIN " (last msgsplit))}]))
       "PRIVMSG" (re-frame/dispatch [::add-message {:from (subs (first (str/split (first msgsplit) #"!")) 1)
                                                    :time (current-time) :type "PRIVMSG"
                                                    :msg (subs (str/join " " (subvec msgsplit 3)) 1)}])

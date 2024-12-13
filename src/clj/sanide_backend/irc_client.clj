@@ -27,7 +27,7 @@
   (write (str "PONG "  (re-find #":.*" msg))))
 
 (defn conn-handler [ws-channel]
-  (while (nil? (:exit @irc-conn))
+  (while (= false (:exit @irc-conn))
     (let [msg (.readLine (:in @irc-conn))]
       (println msg)
       (cond

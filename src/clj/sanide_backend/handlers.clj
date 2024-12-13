@@ -72,10 +72,12 @@
 (def channels (atom #{}))
 
 (defn websocket-on-open [ch]
-  (swap! channels conj ch))
+  (swap! channels conj ch)
+  (dosync (alter irc/irc-conn merge {:exit false})))
 
 (defn websocket-on-close [ch _]
-  (swap! channels disj ch))
+  (swap! channels disj ch)
+  (dosync (alter irc/irc-conn merge {:exit true})))
 
 (defn websocket-on-receive [ch message]
   (let [message-json (json/read-str message :key-fn keyword)]

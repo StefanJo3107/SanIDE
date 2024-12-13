@@ -46,3 +46,8 @@
  ::messages
  (fn [db]
    (:messages db)))
+
+(re-frame/reg-sub
+ ::participants
+ (fn [db]
+   (:participants db)))

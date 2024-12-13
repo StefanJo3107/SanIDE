@@ -187,18 +187,23 @@
       @messages)]))
 
 (defn irc-chat []
-  (r/with-let [message (r/atom "")]
+  (r/with-let [message (r/atom "") participants (re-frame/subscribe [::subs/participants])]
     [:div.irc-chat-container
      [:div.irc-chat
       [:fieldset.irc-chat-area
        [:legend "Chat"]
        [irc-messages]]
-      [:form.irc-message-field {:on-submit #((-> % .preventDefault) (re-frame/dispatch [::events/irc-send-msg @message]))}
+      [:form.irc-message-field {:on-submit #((-> % .preventDefault)
+                                             (re-frame/dispatch [::events/irc-send-msg @message])
+                                             (reset! message ""))}
        [:input.text-input {:type "text" :value @message :id "irc-message" :placeholder "Message..."
                            :on-change #(reset! message (-> % .-target .-value))}]
        [:input {:type "submit" :hidden true}]]]
      [:fieldset.irc-recipients
-      [:legend "Participants"]]]))
+      [:legend "Participants"]
+      (map (fn [p]
+             (let [[h s l] (:color p)]
+               [:div.irc-participant {:style {:color (str "hsl(" h "," s "%," l "%)")}} (:name p)])) @participants)]]))
 
 (defn irc []
   (let [irc-connected (re-frame/subscribe [::subs/irc-connected])]
