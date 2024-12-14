@@ -220,12 +220,12 @@
       "353" (when (> msglen 6) (re-frame/dispatch [::add-participants (map #(hash-map
                                                                              :name (str/replace % ":" "")
                                                                              :color [(rand-int 360)
-                                                                                     (+ 50 (rand-int 51))
+                                                                                     (rand-int 101)
                                                                                      (+ 50 (rand-int 51))])
                                                                            (subvec msgsplit 6 msglen))]))
       "JOIN" (do
                (re-frame/dispatch [::add-participant {:name (subs (first (str/split (first msgsplit) #"!")) 1)
-                                                      :color [(rand-int 360) (+ 50 (rand-int 51)) (+ 50 (rand-int 51))]}])
+                                                      :color [(rand-int 360) (rand-int 101) (+ 50 (rand-int 51))]}])
                (re-frame/dispatch [::add-message {:from "" :type "JOIN" :time (current-time)
                                                   :msg (str "➙ JOIN " (last msgsplit))}]))
       "PRIVMSG" (re-frame/dispatch [::add-message {:from (subs (first (str/split (first msgsplit) #"!")) 1)

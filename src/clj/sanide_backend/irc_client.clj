@@ -15,7 +15,7 @@
         in (BufferedReader. (InputStreamReader. (.getInputStream socket)))
         out (PrintWriter. (.getOutputStream socket))]
     (c/dosync
-     (c/alter irc-conn merge {:in in :out out}))
+     (c/alter irc-conn merge {:socket socket :in in :out out}))
     (doto (Thread. #(conn-handler ws-channel)) (.start))))
 
 (defn write [msg]
@@ -27,13 +27,15 @@
   (write (str "PONG "  (re-find #":.*" msg))))
 
 (defn conn-handler [ws-channel]
-  (while (= false (:exit @irc-conn))
-    (let [msg (.readLine (:in @irc-conn))]
-      (println msg)
-      (cond
-        (re-find #"^ERROR :Closing Link:" msg) (c/dosync (c/alter irc-conn merge {:exit true}))
-        (re-find #"^PING" msg) (pong msg)
-        :else (hk/send! ws-channel msg)))))
+  (try (while (= false (:exit @irc-conn))
+         (let [msg (.readLine (:in @irc-conn))]
+           (println msg)
+           (cond
+             (re-find #"^ERROR :Closing Link:" msg) (c/dosync (c/alter irc-conn merge {:exit true}))
+             (re-find #"^PING" msg) (pong msg)
+             :else (hk/send! ws-channel msg))))
+       (catch Exception _ (println "Closing socket connection"))
+       (finally (println "Closing irc connection"))))
 
 (defn login [user]
   (write (str "NICK " user))

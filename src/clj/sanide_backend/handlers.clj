@@ -77,6 +77,7 @@
 
 (defn websocket-on-close [ch _]
   (swap! channels disj ch)
+  (when (not (nil? (:socket @irc/irc-conn))) (.close (:socket @irc/irc-conn)))
   (dosync (alter irc/irc-conn merge {:exit true})))
 
 (defn websocket-on-receive [ch message]
