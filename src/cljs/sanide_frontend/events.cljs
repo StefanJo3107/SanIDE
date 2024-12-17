@@ -81,6 +81,11 @@
    (assoc db :irc-connected val)))
 
 (re-frame/reg-event-db
+ ::set-irc-loading
+ (fn [db [_ val]]
+   (assoc db :irc-loading val)))
+
+(re-frame/reg-event-db
  ::cache-loaded-project
  (fn [_ [_ val]]
    (.setItem js/localStorage "project" (.stringify js/JSON (clj->js val)))))
@@ -114,6 +119,12 @@
  ::open-example-failure
  (fn [db [_ fail]]
    (assoc db :open-example-failure fail)))
+
+(re-frame/reg-event-db
+ ::update-loading-char
+ (fn [db _]
+   (let [loading-chars ["" "" "" "" "" ""]]
+     (assoc db :loading-char (get loading-chars (mod (+ (.indexOf loading-chars (:loading-char db)) 1) (count loading-chars)))))))
 
 ;; reg-event-fx
 (re-frame/reg-event-fx
@@ -214,7 +225,8 @@
   (println (.-data msg))
   (let [msgsplit (str/split (.-data msg) #" ") msglen (count msgsplit)]
     (case (second msgsplit)
-      "001" (re-frame/dispatch [::set-irc-connected true])
+      "001" (do (re-frame/dispatch [::set-irc-connected true])
+                (re-frame/dispatch [::set-irc-loading false]))
       "372" (re-frame/dispatch [::add-message {:from "" :type "MOTD" :time (current-time)
                                                :msg (if (> msglen 4) (str/join " " (subvec msgsplit 4 msglen)) " ")}])
       "353" (when (> msglen 6) (re-frame/dispatch [::add-participants (map #(hash-map
@@ -269,7 +281,8 @@
     :fx [[:dispatch [::set-server-address (:server vals)]]
          [:dispatch [::set-server-port (:port vals)]]
          [:dispatch [::set-username (:username vals)]]
-         [:dispatch [::set-channel (:channel vals)]]]}))
+         [:dispatch [::set-channel (:channel vals)]]
+         [:dispatch [::set-irc-loading true]]]}))
 
 (re-frame/reg-fx
  ::irc-send-msg-fx

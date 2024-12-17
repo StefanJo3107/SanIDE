@@ -11,6 +11,10 @@
   ([input-id label-text input-value]
    [:div.text-field [:label.input-label {:htmlFor input-id} label-text]
     [:input.text-input {:type "text" :value @input-value :id input-id
+                        :on-change #(reset! input-value (-> % .-target .-value))}]])
+  ([input-id label-text input-value placeholder]
+   [:div.text-field [:label.input-label {:htmlFor input-id} label-text]
+    [:input.text-input {:type "text" :value @input-value :id input-id :placeholder placeholder
                         :on-change #(reset! input-value (-> % .-target .-value))}]]))
 
 (defn show-new-project-dialog []
@@ -96,6 +100,8 @@
 (defn button
   ([icon text onclick]
    [:button.btn {:onClick onclick} [:img {:src icon}] [:span text]])
+  ([icon text onclick disabled]
+   [:button.btn {:onClick onclick :disabled disabled} [:img {:src icon}] [:span text]])
   ([text onclick] [:button.btn.small {:onClick onclick} [:span text]]))
 
 (defn output []
@@ -162,18 +168,21 @@
        [empty-area]])))
 
 (defn irc-menu []
-  (r/with-let [server-address (r/atom "") server-port (r/atom "") username (r/atom "") channel (r/atom "") port (r/atom 6667)]
+  (r/with-let [server-address (r/atom "") server-port (r/atom "") username (r/atom "") channel (r/atom "") port (r/atom 6667)
+               irc-loading (re-frame/subscribe [::subs/irc-loading]) loading-char (re-frame/subscribe [::subs/loading-char])]
     [:div.irc-menu
      [:div.join-form
       [:h3.join-server-title "Join server"]
-      [text-input "irc-server-address" "Server address" server-address]
-      [text-input "irc-server-port" "Server port" server-port]
-      [text-input "irc-username" "Username" username]
-      [text-input "irc-username" "Channel" channel]
-      [button "/images/build-icon.png" "Join" #(re-frame/dispatch [::events/irc-connect {:server @server-address
-                                                                                         :port (int @server-port)
-                                                                                         :username @username
-                                                                                         :channel @channel}])]]]))
+      [text-input "irc-server-address" "Server address" server-address "irc.example.com"]
+      [text-input "irc-server-port" "Server port" server-port "6667"]
+      [text-input "irc-username" "Username" username "example-name"]
+      [text-input "irc-username" "Channel" channel "#example-channel"]
+      [button "/images/build-icon.png" (if (= @irc-loading false) "Join" (str "Loading " @loading-char))
+       #(re-frame/dispatch [::events/irc-connect {:server @server-address
+                                                  :port (int @server-port)
+                                                  :username @username
+                                                  :channel @channel}])
+       @irc-loading]]]))
 
 (defn irc-messages []
   (let [messages (re-frame/subscribe [::subs/messages])]

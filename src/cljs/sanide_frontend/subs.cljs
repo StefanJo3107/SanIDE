@@ -43,6 +43,16 @@
    (:irc-connected db)))
 
 (re-frame/reg-sub
+ ::irc-loading
+ (fn [db]
+   (:irc-loading db)))
+
+(re-frame/reg-sub
+ ::loading-char
+ (fn [db]
+   (:loading-char db)))
+
+(re-frame/reg-sub
  ::messages
  (fn [db]
    (:messages db)))
