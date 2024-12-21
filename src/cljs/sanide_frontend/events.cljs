@@ -76,6 +76,11 @@
    (update db :participants conj val)))
 
 (re-frame/reg-event-db
+ ::remove-participant
+ (fn [db [_ val]]
+   (assoc db :participants (remove #(= (:name %) val) (:participants db)))))
+
+(re-frame/reg-event-db
  ::set-irc-connected
  (fn [db [_ val]]
    (assoc db :irc-connected val)))
@@ -239,7 +244,11 @@
                (re-frame/dispatch [::add-participant {:name (subs (first (str/split (first msgsplit) #"!")) 1)
                                                       :color [(rand-int 360) (rand-int 101) (+ 50 (rand-int 51))]}])
                (re-frame/dispatch [::add-message {:from "" :type "JOIN" :time (current-time)
-                                                  :msg (str "➙ JOIN " (last msgsplit))}]))
+                                                  :msg (str "↳ " (subs (first (str/split (first msgsplit) #"!")) 1) " joined " (last msgsplit))}]))
+      "QUIT" (do
+               (re-frame/dispatch [::remove-participant (subs (first (str/split (first msgsplit) #"!")) 1)])
+               (re-frame/dispatch [::add-message {:from "" :type "QUIT" :time (current-time)
+                                                  :msg (str (str "↲ " (subs (first (str/split (first msgsplit) #"!")) 1) " left"))}]))
       "PRIVMSG" (re-frame/dispatch [::add-message {:from (subs (first (str/split (first msgsplit) #"!")) 1)
                                                    :time (current-time) :type "PRIVMSG"
                                                    :msg (subs (str/join " " (subvec msgsplit 3)) 1)}])

@@ -184,13 +184,14 @@
                                                   :channel @channel}])
        @irc-loading]]]))
 
-(defn irc-messages []
+(defn irc-messages [participants]
   (let [messages (re-frame/subscribe [::subs/messages])]
     [:div.irc-messages
      (map
       (fn [msg] [:div.irc-message
                  [:div.irc-msg-meta
-                  (when (not (= (:from msg) "")) [:div.irc-sender (:from msg)])
+                  (when (not (= (:from msg) "")) (let [[h s l] (:color (first (filter #(= (:from msg) (:name %)) participants)))]
+                                                   [:div.irc-sender {:style {:color (str "hsl(" h "," s "%," l "%)")}} (:from msg)]))
                   [:div.irc-time (:time msg)]]
                  [:div.irc-msg-content (:msg msg)]])
       @messages)]))
@@ -201,7 +202,7 @@
      [:div.irc-chat
       [:fieldset.irc-chat-area
        [:legend "Chat"]
-       [irc-messages]]
+       [irc-messages @participants]]
       [:form.irc-message-field {:on-submit #((-> % .preventDefault)
                                              (re-frame/dispatch [::events/irc-send-msg @message])
                                              (reset! message ""))}
