@@ -5,7 +5,12 @@
    [sanide-frontend.events :as events]
    [sanide-frontend.subs :as subs]
    ["@monaco-editor/react$default" :as Editor]
-   [re-pressed.core :as rp]))
+   [re-pressed.core :as rp]
+   ["react-hot-toast" :refer (Toaster)]
+   ["react-hot-toast$default" :as toast]))
+
+(defn error-toast [msg]
+  (toast msg (clj->js {:icon "❌"})))
 
 (defn text-input
   ([input-id label-text input-value]
@@ -236,6 +241,12 @@
                               {:keyCode 83
                                :ctrlKey true}]}])
     [:div
+     [:> Toaster {:position "bottom-right"
+                  :toastOptions (clj->js {:style {:border "2px solid #455766"
+                                                  :border-radius "0"
+                                                  :outline "2px solid black"
+                                                  :background-color "#22252e"
+                                                  :color "white"}})}]
      [navbar]
      [menu]
      (case @active-item
