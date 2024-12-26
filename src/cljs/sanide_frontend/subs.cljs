@@ -48,6 +48,11 @@
    (:irc-loading db)))
 
 (re-frame/reg-sub
+ ::server-address
+ (fn [db]
+   (:server-address db)))
+
+(re-frame/reg-sub
  ::loading-char
  (fn [db]
    (:loading-char db)))

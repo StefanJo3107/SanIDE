@@ -2,7 +2,6 @@
   (:require [ring.mock.request :as mock]
             [sanide-backend.handlers :as handlers]
             [test-with-files.tools :as twf]
-            [clojure.java.io :as io]
             [clojure.test :as t]))
 
 (t/deftest api-tests

@@ -64,8 +64,7 @@
   (let [active-item (re-frame/subscribe [::subs/active-item])]
     [:div.menu
      [tab-item "Editor" (= @active-item :editor) #(re-frame/dispatch [::events/set-active-item :editor])]
-     [tab-item "IRC Client" (= @active-item :irc) #(re-frame/dispatch [::events/set-active-item :irc])]
-     [tab-item "Simulator" (= @active-item :simulator) #(re-frame/dispatch [::events/set-active-item :simulator])]]))
+     [tab-item "IRC Client" (= @active-item :irc) #(re-frame/dispatch [::events/set-active-item :irc])]]))
 
 
 (defn filesystem ^clj [show-project project active-file]
