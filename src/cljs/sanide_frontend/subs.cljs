@@ -53,6 +53,21 @@
    (:server-address db)))
 
 (re-frame/reg-sub
+ ::server-port
+ (fn [db]
+   (:server-port db)))
+
+(re-frame/reg-sub
+ ::username
+ (fn [db]
+   (:username db)))
+
+(re-frame/reg-sub
+ ::channel
+ (fn [db]
+   (:channel db)))
+
+(re-frame/reg-sub
  ::loading-char
  (fn [db]
    (:loading-char db)))
