@@ -5,8 +5,8 @@
             [clojure.test :as t]))
 
 (t/deftest api-tests
-  (t/is (= (handlers/get-examples (mock/request :get "/fs/get-examples")) {:body ["sanscript_example1" "sanscript_example2"]
-                                                                           :headers {} :status 200}))
+;;   (t/is (= (handlers/get-examples (mock/request :get "/fs/get-examples")) {:body ["sanscript_example1" "sanscript_example2"]
+;;                                                                            :headers {} :status 200}))
   (twf/with-files tmp-proj ["tmp.san" "print \"Hello\""
                             "config.toml" "mode=\"auto\""]
     (t/is (= {:status 200

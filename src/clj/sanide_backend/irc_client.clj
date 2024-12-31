@@ -1,7 +1,6 @@
 (ns sanide-backend.irc-client
   (:require [clojure.core :as c]
-            [org.httpkit.server :as hk]
-            [clojure.data.json :as json])
+            [org.httpkit.server :as hk])
   (:import [java.net Socket]
            [java.lang Thread]
            [java.io PrintWriter InputStreamReader BufferedReader]))

@@ -51,10 +51,15 @@
                        :parameters {:body {:file_path s/Str :content s/Str}}
                        :handler handler/save-file
                        :responses {200 {:body {:file_path s/Str :content s/Str}}}}}]
-      ["/build" {:get {:summary "Compiles provided sanscript project to bytecode"
+      ["/init" {:get {:summary "Initializes SanScript"
+                      :handler handler/init-sanscript
+                      :responses {200 {}}}}]
+      ["/build" {:get {:summary "Compiles provided SanScript project to bytecode"
+                       :parameters {:query {:path s/Str}}
                        :handler handler/build-sanscript
                        :responses {200 {}}}}]
-      ["/flash" {:get {:summary "Flashes provided sanscript project to SanUSB"
+      ["/flash" {:get {:summary "Flashes provided SanScript project to SanUSB"
+                       :parameters {:query {:path s/Str}}
                        :handler handler/flash-sanscript
                        :responses {200 {}}}}]]
      ["" {:no-doc true}
