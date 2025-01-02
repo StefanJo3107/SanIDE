@@ -10,12 +10,15 @@
 (def irc-conn (c/ref {}))
 
 (defn connect [ws-channel server port]
-  (let [socket (Socket. server port)
-        in (BufferedReader. (InputStreamReader. (.getInputStream socket)))
-        out (PrintWriter. (.getOutputStream socket))]
-    (c/dosync
-     (c/alter irc-conn merge {:socket socket :in in :out out}))
-    (doto (Thread. #(conn-handler ws-channel)) (.start))))
+  (try
+    (let [socket (Socket. server port)
+          in (BufferedReader. (InputStreamReader. (.getInputStream socket)))
+          out (PrintWriter. (.getOutputStream socket))]
+      (c/dosync
+       (c/alter irc-conn merge {:socket socket :in in :out out}))
+      (doto (Thread. #(conn-handler ws-channel)) (.start)))
+    (catch Exception _
+      (hk/send! ws-channel "IRC ERR Couldn't establish IRC connection"))))
 
 (defn write [msg]
   (doto (:out @irc-conn)
@@ -33,7 +36,9 @@
              (re-find #"^ERROR :Closing Link:" msg) (c/dosync (c/alter irc-conn merge {:exit true}))
              (re-find #"^PING" msg) (pong msg)
              :else (hk/send! ws-channel msg))))
-       (catch Exception _ (println "Closing socket connection"))
+       (catch Exception _
+         (println "Closing socket connection")
+         (hk/send! ws-channel "IRC ERR IRC connection closed"))
        (finally (println "Closing irc connection"))))
 
 (defn login [user]
@@ -51,5 +56,6 @@
 
 (defn init [ws-channel server port user channel]
   (connect ws-channel server port)
-  (login user)
-  (join-channel channel))
+  (when (some? (:out irc-conn))
+    (login user)
+    (join-channel channel)))

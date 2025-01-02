@@ -459,3 +459,7 @@ dialog::backdrop {
 .irc-msg-content {
     white-space: pre-line;
 }
+
+.error-toast > div:first-child {
+    color: red !important;
+}

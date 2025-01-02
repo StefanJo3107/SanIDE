@@ -9,7 +9,8 @@
    [wscljs.client :as ws]
    [wscljs.format :as fmt]
    [goog.string :as gstring]
-   [goog.string.format]))
+   [goog.string.format]
+   [sanide-frontend.common :as common]))
 
 ;; reg-event-db
 (re-frame/reg-event-db
@@ -98,16 +99,20 @@
 (re-frame/reg-event-db
  ::new-project-failure
  (fn [db [_ fail]]
+   (common/error-toast (:err (:response fail)))
    (assoc db :new-project-failure fail)))
 
 (re-frame/reg-event-db
  ::open-project-failure
  (fn [db [_ fail]]
+   (println fail)
+   (common/error-toast (:err (:response fail)))
    (assoc db :open-project-failure fail)))
 
 (re-frame/reg-event-db
  ::save-project-failure
  (fn [db [_ fail]]
+   (common/error-toast (:err (:response fail)))
    (assoc db :save-project-failure fail)))
 
 (re-frame/reg-event-db
@@ -123,6 +128,7 @@
 (re-frame/reg-event-db
  ::open-example-failure
  (fn [db [_ fail]]
+   (common/error-toast (:err (:response fail)))
    (assoc db :open-example-failure fail)))
 
 (re-frame/reg-event-db
@@ -252,6 +258,9 @@
       "PRIVMSG" (re-frame/dispatch [::add-message {:from (subs (first (str/split (first msgsplit) #"!")) 1)
                                                    :time (current-time) :type "PRIVMSG"
                                                    :msg (subs (str/join " " (subvec msgsplit 3)) 1)}])
+      "ERR" (do
+              (common/error-toast (str/join " " (subvec msgsplit 2)))
+              (re-frame/dispatch [::set-irc-loading false]))
       ())))
 
 (re-frame/reg-cofx

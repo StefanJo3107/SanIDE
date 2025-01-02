@@ -9,9 +9,6 @@
    ["react-hot-toast" :refer (Toaster)]
    ["react-hot-toast$default" :as toast]))
 
-(defn error-toast [msg]
-  (toast msg (clj->js {:icon "❌"})))
-
 (defn text-input
   ([input-id label-text input-value]
    [:div.text-field [:label.input-label {:htmlFor input-id} label-text]
@@ -242,9 +239,9 @@
     [:div
      [:> Toaster {:position "bottom-right"
                   :toastOptions (clj->js {:style {:border "2px solid #455766"
-                                                  :border-radius "0"
+                                                  :borderRadius "0"
                                                   :outline "2px solid black"
-                                                  :background-color "#22252e"
+                                                  :backgroundColor "#22252e"
                                                   :color "white"}})}]
      [navbar]
      [menu]
