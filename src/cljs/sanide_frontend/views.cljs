@@ -6,8 +6,7 @@
    [sanide-frontend.subs :as subs]
    ["@monaco-editor/react$default" :as Editor]
    [re-pressed.core :as rp]
-   ["react-hot-toast" :refer (Toaster)]
-   ["react-hot-toast$default" :as toast]))
+   ["react-hot-toast" :refer (Toaster)]))
 
 (defn text-input
   ([input-id label-text input-value]
@@ -27,29 +26,41 @@
   (let [dialog (js/document.querySelector ".modal")]
     (-> dialog .close)))
 
+(defn show-github-repo []
+  (js/window.open "https://github.com/StefanJo3107/SanIDE"))
+
 (defn nav-menu [actions expanded?]
   (into [:ul.nav-menu] (map #(vector :li.nav-action {:onClick (fn []  ((:action %) (swap! expanded? not)))} (:name %)) actions)))
 
-(defn nav-item [name actions]
-  (r/with-let [expanded-menu? (r/atom false)]
-    [:div.navitem-container
-     [:button.navitem {:onClick #(swap! expanded-menu? not)} [:span.item-char (first name)] [:span.item-rest (rest name)]]
-     (when @expanded-menu? [nav-menu actions expanded-menu?])]))
+(defn nav-item [name actions expanded?]
+  (let [on-click-outside (fn [event]
+                           (when-not (.contains (js/document.getElementById name)
+                                                (.-target event))
+                             (reset! expanded? false)))]
+    [:div.navitem-container {:id name}
+     [:button.navitem {:onClick (fn [_]
+                                  (if @expanded?
+                                    (js/document.removeEventListener "click" on-click-outside)
+                                    (js/document.addEventListener "click" on-click-outside))
+                                  (swap! expanded? not))} [:span.item-char (first name)] [:span.item-rest (rest name)]]
+     (when @expanded? [nav-menu actions expanded?])]))
 
 (defn navbar []
-  (let [project (re-frame/subscribe [::subs/project]) active-file (re-frame/subscribe [::subs/active-file])
-        latest-payload (re-frame/subscribe [::subs/latest-payload]) latest-config (re-frame/subscribe [::subs/latest-config])]
+  (r/with-let [active-item (re-frame/subscribe [::subs/active-item]) project (re-frame/subscribe [::subs/project])
+               active-file (re-frame/subscribe [::subs/active-file]) latest-payload (re-frame/subscribe [::subs/latest-payload])
+               latest-config (re-frame/subscribe [::subs/latest-config]) expanded-file? (r/atom false) expanded-help? (r/atom false)]
     [:nav.navbar>div.container
      [:div.title-container [:img {:src "/images/san_logo_rounded.png"}] [:span.title "SanIDE"]]
-     [:div.navitems [nav-item "File" [{:name "New project" :action show-new-project-dialog}
-                                      {:name "Open project" :action #(re-frame/dispatch [::events/open-dialog])}
-                                      {:name "Save project" :action #(re-frame/dispatch [::events/save-file
-                                                                                         {:file_path (str (:project_path @project) "/" @active-file)
-                                                                                          :content (if (= @active-file (:payload_name @project))
-                                                                                                     @latest-payload @latest-config)}])}
-                                      {:name "Close project" :action #(re-frame/dispatch [::events/close-project])}]]
-      [nav-item "Edit"]
-      [nav-item "Help"]]]))
+     [:div.navitems (if (= @active-item :editor)
+                      [nav-item "File" [{:name "New project" :action show-new-project-dialog}
+                                        {:name "Open project" :action #(re-frame/dispatch [::events/open-dialog])}
+                                        {:name "Save project" :action #(re-frame/dispatch [::events/save-file
+                                                                                           {:file_path (str (:project_path @project) "/" @active-file)
+                                                                                            :content (if (= @active-file (:payload_name @project))
+                                                                                                       @latest-payload @latest-config)}])}
+                                        {:name "Close project" :action #(re-frame/dispatch [::events/close-project])}] expanded-file?]
+                      [nav-item "File" [{:name "Disconnect" :action #(re-frame/dispatch [::events/irc-disconnect])}] expanded-file?])
+      [nav-item "Help" [{:name "Github repo" :action show-github-repo}] expanded-help?]]]))
 
 (defn tab-backgroud [active]
   (if active "/images/tab-active.png" "images/tab-inactive.png"))
@@ -106,30 +117,36 @@
   ([text onclick] [:button.btn.small {:onClick onclick} [:span text]]))
 
 (defn output []
-  [:div.output "Output:" [:div.output-terminal]])
+  (let [build-result (re-frame/subscribe [::subs/build-result])]
+    [:div.output "Output:" [:div.output-terminal @build-result]]))
 
 (defn text-editor [project latest-payload latest-config active-file]
-  [:div.text-editor
-   [:div.editor-header [:span.filename (str (:project_path project) "/"
-                                            (if (= active-file (:payload_name project))
-                                              (:payload_name project)
-                                              "config.toml"))]
-    [:div.editor-btns
-     [button "/images/build-icon.png" "Build" #()]
-     [button "/images/flash-icon.png" "Flash" #()]
-     [button "/images/simulate-icon.png" "Simulate" #()]]]
-   [:div.code [:div.codearea [:> Editor {:height "100%"
+  (let [flash-loading (re-frame/subscribe [::subs/flash-loading]) loading-char (re-frame/subscribe [::subs/loading-char])]
+    [:div.text-editor
+     [:div.editor-header [:span.filename (str (:project_path project) "/"
+                                              (if (= active-file (:payload_name project))
+                                                (:payload_name project)
+                                                "config.toml"))]
+      [:div.editor-btns
+       [button "/images/build-icon.png" "Build" #(re-frame/dispatch
+                                                  [::events/build (str (:project_path project) "/" (:payload_name project))])]
+       [button "/images/flash-icon.png" (if (= true @flash-loading) (str "Flash " @loading-char) "Flash")
+        #(re-frame/dispatch [::events/flash {:san_path (str (:project_path project) "/" (:payload_name project))
+                                             :config_path (str (:project_path project) "/config.toml")}])
+        @flash-loading]]]
+     [:div.code [:div.codearea [:> Editor {:height "100%"
                               ;; :defaultLanguage "javascript"
-                                         :theme "vs-dark"
-                                         :value (if (= active-file (:payload_name project))
-                                                  latest-payload
-                                                  latest-config)
-                                         :path (str (:project_path project) "/" active-file)
-                                         :onChange #(if (= active-file  (:payload_name project))
-                                                      (re-frame/dispatch [::events/set-latest-payload %1])
-                                                      (re-frame/dispatch [::events/set-latest-config %1]))
-                                         :options (clj->js {"minimap" {"enabled" false} "automaticLayout" true})}]]
-    [output]]])
+                                           :theme "vs-dark"
+                                           :value (if (= active-file (:payload_name project))
+                                                    latest-payload
+                                                    latest-config)
+                                           :path (str (:project_path project) "/" active-file)
+                                           :onChange #(do (re-frame/dispatch [::events/save-file {:file_path (str (:project_path project) "/" active-file) :content %1}])
+                                                          (if (= active-file  (:payload_name project))
+                                                            (re-frame/dispatch [::events/set-latest-payload %1])
+                                                            (re-frame/dispatch [::events/set-latest-config %1])))
+                                           :options (clj->js {"minimap" {"enabled" false} "automaticLayout" true})}]]
+      [output]]]))
 
 (defn modal [children]
   [:dialog.modal
@@ -187,15 +204,26 @@
 
 (defn irc-messages [participants]
   (let [messages (re-frame/subscribe [::subs/messages])]
+    (print participants)
     [:div.irc-messages
      (map
-      (fn [msg] [:div.irc-message
+      (fn [msg] [:div.irc-message {:key (rand-int 100000)}
                  [:div.irc-msg-meta
                   (when (not (= (:from msg) "")) (let [[h s l] (:color (first (filter #(= (:from msg) (:name %)) participants)))]
                                                    [:div.irc-sender {:style {:color (str "hsl(" h "," s "%," l "%)")}} (:from msg)]))
                   [:div.irc-time (:time msg)]]
                  [:div.irc-msg-content (:msg msg)]])
       @messages)]))
+
+(defn irc-footer []
+  (let [channel (re-frame/subscribe [::subs/channel]) username (re-frame/subscribe [::subs/username])
+        participants (re-frame/subscribe [::subs/participants]) server-address (re-frame/subscribe [::subs/server-address])
+        server-port (re-frame/subscribe [::subs/server-port])]
+    [:div.irc-footer
+     [:span.irc-info "Server: " (str @server-address ":" @server-port)]
+     [:span.irc-info "User: " @username]
+     [:span.irc-info "Channel: " @channel]
+     [:span.irc-info "Number of participants: " (count @participants)]]))
 
 (defn irc-chat []
   (r/with-let [message (r/atom "") participants (re-frame/subscribe [::subs/participants])]
@@ -206,7 +234,10 @@
        [irc-messages @participants]]
       [:form.irc-message-field {:on-submit #((-> % .preventDefault)
                                              (re-frame/dispatch [::events/irc-send-msg @message])
-                                             (reset! message ""))}
+                                             (reset! message "")
+                                             (js/setTimeout (fn [] (.scrollIntoView (.-lastChild (js/document.querySelector ".irc-chat-area"))
+                                                                                    (clj->js {:behavior "smooth" :block "end"})))
+                                                            100))}
        [:input.text-input {:type "text" :value @message :id "irc-message" :placeholder "Message..."
                            :on-change #(reset! message (-> % .-target .-value))}]
        [:input {:type "submit" :hidden true}]]]
@@ -214,12 +245,14 @@
       [:legend "Participants"]
       (map (fn [p]
              (let [[h s l] (:color p)]
-               [:div.irc-participant {:style {:color (str "hsl(" h "," s "%," l "%)")}} (:name p)])) @participants)]]))
+               [:div.irc-participant {:key (:name p) :style {:color (str "hsl(" h "," s "%," l "%)")}} (:name p)])) @participants)]]))
 
 (defn irc []
   (let [irc-connected (re-frame/subscribe [::subs/irc-connected])]
-    [:div.irc-container
-     (if (= @irc-connected true) [irc-chat] [irc-menu])]))
+    [:div.irc-wrapper
+     [:div.irc-container
+      (if (= @irc-connected true) [irc-chat] [irc-menu])]
+     (when (= @irc-connected true) [irc-footer])]))
 
 (defn main-panel []
   (let [active-item (re-frame/subscribe [::subs/active-item]) project (re-frame/subscribe [::subs/project])

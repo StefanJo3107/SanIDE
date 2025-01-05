@@ -10,6 +10,7 @@
 (def irc-conn (c/ref {}))
 
 (defn connect [ws-channel server port]
+  (c/dosync (alter irc-conn merge {:exit false}))
   (try
     (let [socket (Socket. server port)
           in (BufferedReader. (InputStreamReader. (.getInputStream socket)))
@@ -19,6 +20,10 @@
       (doto (Thread. #(conn-handler ws-channel)) (.start)))
     (catch Exception _
       (hk/send! ws-channel "IRC ERR Couldn't establish IRC connection"))))
+
+(defn disconnect []
+  (when (not (nil? (:socket @irc-conn))) (.close (:socket @irc-conn)))
+  (dosync (alter irc-conn merge {:exit true})))
 
 (defn write [msg]
   (doto (:out @irc-conn)
@@ -56,6 +61,5 @@
 
 (defn init [ws-channel server port user channel]
   (connect ws-channel server port)
-  (when (some? (:out irc-conn))
-    (login user)
-    (join-channel channel)))
+  (login user)
+  (join-channel channel))

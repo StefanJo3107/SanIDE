@@ -18,3 +18,9 @@
 /.lsp/
 /.cpcache/
 /.calva/
+
+/SanScript/
+config.toml
+san_compiler
+san_vm
+santool

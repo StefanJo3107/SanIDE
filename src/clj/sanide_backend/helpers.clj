@@ -19,7 +19,7 @@
     nil))
 
 (defn get-file-with-extension [dir ext]
-  (first (filter #(str/includes? % ext) (get-filenames dir))))
+  (first (filter #(str/ends-with? % ext) (get-filenames dir))))
 
 (defn is-san-project? [dir]
   (if (and (some #(str/includes? % ".san") (get-filenames dir)) (some #(= "config.toml" %) (get-filenames dir)))

@@ -81,3 +81,13 @@
  ::participants
  (fn [db]
    (:participants db)))
+
+(re-frame/reg-sub
+ ::build-result
+ (fn [db]
+   (:build-result db)))
+
+(re-frame/reg-sub
+ ::flash-loading
+ (fn [db]
+   (:flash-loading db)))

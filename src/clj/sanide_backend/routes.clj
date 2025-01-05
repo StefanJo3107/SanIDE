@@ -59,7 +59,7 @@
                        :handler handler/build-sanscript
                        :responses {200 {}}}}]
       ["/flash" {:get {:summary "Flashes provided SanScript project to SanUSB"
-                       :parameters {:query {:path s/Str}}
+                       :parameters {:query {:san_path s/Str :config_path s/Str}}
                        :handler handler/flash-sanscript
                        :responses {200 {}}}}]]
      ["" {:no-doc true}

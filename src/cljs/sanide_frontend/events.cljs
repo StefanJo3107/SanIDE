@@ -67,6 +67,11 @@
        (update db :messages conj val)))))
 
 (re-frame/reg-event-db
+ ::reset-messages
+ (fn [db _]
+   (assoc db :messages [])))
+
+(re-frame/reg-event-db
  ::add-participants
  (fn [db [_ val]]
    (assoc db :participants (into (:participants db) val))))
@@ -82,6 +87,11 @@
    (assoc db :participants (remove #(= (:name %) val) (:participants db)))))
 
 (re-frame/reg-event-db
+ ::reset-participants
+ (fn [db _]
+   (assoc db :participants [])))
+
+(re-frame/reg-event-db
  ::set-irc-connected
  (fn [db [_ val]]
    (assoc db :irc-connected val)))
@@ -91,29 +101,10 @@
  (fn [db [_ val]]
    (assoc db :irc-loading val)))
 
-(re-frame/reg-event-db
- ::cache-loaded-project
- (fn [_ [_ val]]
-   (.setItem js/localStorage "project" (.stringify js/JSON (clj->js val)))))
-
-(re-frame/reg-event-db
- ::new-project-failure
- (fn [db [_ fail]]
-   (common/error-toast (:err (:response fail)))
-   (assoc db :new-project-failure fail)))
-
-(re-frame/reg-event-db
- ::open-project-failure
- (fn [db [_ fail]]
-   (println fail)
-   (common/error-toast (:err (:response fail)))
-   (assoc db :open-project-failure fail)))
-
-(re-frame/reg-event-db
- ::save-project-failure
- (fn [db [_ fail]]
-   (common/error-toast (:err (:response fail)))
-   (assoc db :save-project-failure fail)))
+(re-frame/reg-event-fx
+ ::response-failure-notify
+ (fn [_ [_ fail]]
+   {::error-notify (:err (:response fail))}))
 
 (re-frame/reg-event-db
  ::get-examples-result
@@ -121,15 +112,9 @@
    (assoc db :examples result)))
 
 (re-frame/reg-event-db
- ::get-examples-failure
- (fn [db [_ fail]]
-   (assoc db :get-examples-failure fail)))
-
-(re-frame/reg-event-db
- ::open-example-failure
- (fn [db [_ fail]]
-   (common/error-toast (:err (:response fail)))
-   (assoc db :open-example-failure fail)))
+ ::flash-loading
+ (fn [db _]
+   (assoc db :flash-loading true)))
 
 (re-frame/reg-event-db
  ::update-loading-char
@@ -149,7 +134,7 @@
  (fn [cofx [_ result]]
    {:db (assoc (:db cofx) :project result :show-project true :active-file (:payload_name result)
                :latest-payload (:payload_content result) :latest-config (:config_content result))
-    :fx [[:dispatch [::cache-loaded-project result]]]}))
+    ::cache-loaded-project result}))
 
 (re-frame/reg-event-fx
  ::save-project-fx
@@ -159,6 +144,23 @@
                      (if (= file_name "config.toml") :config_content :payload_content) (:content result))})))
 
 (re-frame/reg-event-fx
+ ::init-fx
+ (fn [_ [_ result]]
+   {::success-notify (:msg result)}))
+
+(re-frame/reg-event-fx
+ ::build-fx
+ (fn [cofx [_ result]]
+   {:db (assoc (:db cofx) :build-result (:res result) :flash-loading false)
+    ::success-notify (:msg result)}))
+
+(re-frame/reg-event-fx
+ ::build-failure
+ (fn [cofx [_ result]]
+   {:db (assoc (:db cofx) :build-result (:exc (:response result)) :flash-loading false)
+    ::error-notify (:err (:response result))}))
+
+(re-frame/reg-event-fx
  ::get-new-project
  (fn [_ [_ name]]
    {:http-xhrio {:method :get
@@ -166,7 +168,7 @@
                  :params {:project_name name}
                  :response-format (ajax/json-response-format {:keywords? true})
                  :on-success [::open-project-fx]
-                 :on-failure [::new-project-failure]}}))
+                 :on-failure [::response-failure-notify]}}))
 
 (re-frame/reg-event-fx
  ::open-at-path
@@ -176,7 +178,7 @@
                  :params {:path path}
                  :response-format (ajax/json-response-format {:keywords? true})
                  :on-success [::open-project-fx]
-                 :on-failure [::open-project-failure]}}))
+                 :on-failure [::response-failure-notify]}}))
 
 (re-frame/reg-event-fx
  ::open-dialog
@@ -185,7 +187,7 @@
                  :uri (str config/api-url "/fs/open-dialog")
                  :response-format (ajax/json-response-format {:keywords? true})
                  :on-success [::open-project-fx]
-                 :on-failure [::open-project-failure]}}))
+                 :on-failure [::response-failure-notify]}}))
 
 (re-frame/reg-event-fx
  ::save-file
@@ -196,7 +198,7 @@
                  :format (ajax/json-request-format)
                  :response-format (ajax/json-response-format {:keywords? true})
                  :on-success [::save-project-fx]
-                 :on-failure [::save-project-failure]}}))
+                 :on-failure [::response-failure-notify]}}))
 
 (re-frame/reg-event-fx
  ::get-examples
@@ -205,7 +207,7 @@
                  :uri (str config/api-url "/fs/get-examples")
                  :response-format (ajax/json-response-format {:keywords? true})
                  :on-success [::get-examples-result]
-                 :on-failure [::get-examples-failure]}}))
+                 :on-failure [::response-failure-notify]}}))
 
 (re-frame/reg-event-fx
  ::open-example
@@ -215,7 +217,38 @@
                  :params {:example_name example_name}
                  :response-format (ajax/json-response-format {:keywords? true})
                  :on-success [::open-project-fx]
-                 :on-failure [::open-example-failure]}}))
+                 :on-failure [::response-failure-notify]}}))
+
+(re-frame/reg-event-fx
+ ::init-sanscript
+ (fn [_ _]
+   {:http-xhrio {:method :get
+                 :uri (str config/api-url "/fs/init")
+                 :response-format (ajax/json-response-format {:keywords? true})
+                 :on-success [::init-fx]
+                 :on-failure [::response-failure-notify]}}))
+
+(re-frame/reg-event-fx
+ ::build
+ (fn [_ [_ path]]
+   {:http-xhrio {:method :get
+                 :uri (str config/api-url "/fs/build")
+                 :params {:path path}
+                 :response-format (ajax/json-response-format {:keywords? true})
+                 :on-success [::build-fx]
+                 :on-failure [::build-failure]}}))
+
+(re-frame/reg-event-fx
+ ::flash
+ (fn [_ [_ path]]
+   {:http-xhrio {:method :get
+                 :uri (str config/api-url "/fs/flash")
+                 :params {:san_path (:san_path path)
+                          :config_path (:config_path path)}
+                 :response-format (ajax/json-response-format {:keywords? true})
+                 :on-success [::build-fx]
+                 :on-request [::flash-loading]
+                 :on-failure [::build-failure]}}))
 
 ;cofx
 (re-frame/reg-cofx
@@ -233,7 +266,6 @@
 ;; websockets
 (defn irc-msg-handler
   [msg]
-  (println (.-data msg))
   (let [msgsplit (str/split (.-data msg) #" ") msglen (count msgsplit)]
     (case (second msgsplit)
       "001" (do (re-frame/dispatch [::set-irc-connected true])
@@ -241,7 +273,7 @@
       "372" (re-frame/dispatch [::add-message {:from "" :type "MOTD" :time (current-time)
                                                :msg (if (> msglen 4) (str/join " " (subvec msgsplit 4 msglen)) " ")}])
       "353" (when (> msglen 6) (re-frame/dispatch [::add-participants (map #(hash-map
-                                                                             :name (str/replace % ":" "")
+                                                                             :name (str/replace % #"[@:]" "")
                                                                              :color [(rand-int 360)
                                                                                      (rand-int 101)
                                                                                      (+ 50 (rand-int 51))])
@@ -303,6 +335,24 @@
          [:dispatch [::set-irc-loading true]]]}))
 
 (re-frame/reg-fx
+ ::irc-disconnect-fx
+ (fn [options]
+   (ws/send (:socket options)
+            {:type "disconnect"}
+            fmt/json)))
+
+(re-frame/reg-event-fx
+ ::irc-disconnect
+ (fn [cofx _]
+   {::irc-disconnect-fx {:socket (get-in cofx [:db :ws-socket])}
+    :fx [[:dispatch [::set-irc-connected false]]
+         [:dispatch [::reset-participants]]
+         [:dispatch [::set-server-address ""]]
+         [:dispatch [::set-username ""]]
+         [:dispatch [::set-channel ""]]
+         [:dispatch [::reset-messages]]]}))
+
+(re-frame/reg-fx
  ::irc-send-msg-fx
  (fn [vals]
    (ws/send (:socket vals)
@@ -310,6 +360,21 @@
              :msg (:msg vals)
              :channel (:channel vals)}
             fmt/json)))
+
+(re-frame/reg-fx
+ ::cache-loaded-project
+ (fn [val]
+   (.setItem js/localStorage "project" (.stringify js/JSON (clj->js val)))))
+
+(re-frame/reg-fx
+ ::error-notify
+ (fn [val]
+   (common/error-toast val)))
+
+(re-frame/reg-fx
+ ::success-notify
+ (fn [val]
+   (common/success-toast val)))
 
 (re-frame/reg-event-fx
  ::irc-send-msg

@@ -96,7 +96,7 @@
                              :exc (.getMessage e)}))))
 
 
-(defn init-sanscript []
+(defn init-sanscript [_]
   (let [santool-name (last (.split config/santool-url "/"))]
     (if-not (.exists  (io/as-file santool-name))
       (try
@@ -106,36 +106,44 @@
           (log/info  santool-name " has been downloaded."))
         (bb/shell "chmod" "+x" "santool")
         (bb/shell "./santool" "download")
-        (response/ok)
+        (bb/shell "chmod" "+x" "san_vm")
+        (bb/shell "chmod" "+x" "san_compiler")
+        (response/ok {:msg "Successfully initialized SanScript"})
         (catch Exception e
           (str "caught exception:" (.getMessage e))
           (bb/shell "rm" santool-name)
           (response/bad-request {:err "An error occurred while trying to initialize SanScript"
                                  :exc (.getMessage e)})))
-      (do
-        (print santool-name "is already initialized")
-        (response/bad-request {:err "SanScript is already initialized"})))))
+      (response/ok {:msg "SanScript is already initialized"}))))
 
 (defn build-sanscript [{{{:keys [path]} :query} :parameters}]
   (try
     (let [compile-result (bb/sh "./santool" "compile" "--source-path" path)]
+      (helpers/create-file "build.log" (:out compile-result))
       (if (string/includes? (:out compile-result) "success")
-        (response/ok {:res (:out compile-result)})
+        (response/ok {:msg "Build completed successfully"
+                      :res (:out compile-result)})
         (response/bad-request {:err "Build failed"
                                :exc (:out compile-result)})))
     (catch Exception e (str "caught exception:" (.getMessage e))
+           (helpers/create-file "build.log" e)
            (response/bad-request {:err "An error occurred while trying to build SanScript project"
                                   :exc (.getMessage e)}))))
 
-(defn flash-sanscript [{{{:keys [path]} :query} :parameters}]
+(defn flash-sanscript [{{{:keys [san_path config_path]} :query} :parameters}]
   (try
-    (let [flash-result (bb/sh "./santool" "flash" "--config-path" path)]
-      ;TODO check what is the error message for flashing process
-      (if (string/includes? (:out flash-result) "success")
-        (response/ok {:res (:out flash-result)})
-        (response/bad-request {:err "Flash failed"
-                               :exc (:out flash-result)})))
+    (let [flash-result (bb/sh "./santool" "flash" "-s" san_path "-c" config_path)]
+      (helpers/create-file "flash.log" (str (:out flash-result) (:err flash-result)))
+      (cond
+        (string/includes? (:err flash-result) "Error: espflash::no_serial")
+        (response/bad-request {:err "Flash failed" :exc (str "Error: " (last (.split (:err flash-result) "Error:")))})
+        (string/includes? (:out flash-result) "failed to compile") (response/bad-request {:err "Build failed" :exc (:out flash-result)})
+        (string/includes? (:err flash-result) "Flashing has completed") (response/ok {:msg "Flash completed successfully"
+                                                                                      :res (str (:out flash-result) (:err flash-result))})
+        :else (response/bad-request {:err "Flash failed"
+                                     :exc "Unknown error occurred, check flash.log for more info..."})))
     (catch Exception e (str "caught exception:" (.getMessage e))
+           (helpers/create-file "flash.log" e)
            (response/bad-request {:err "An error occurred while trying to flash SanScript project"
                                   :exc (.getMessage e)}))))
 
@@ -155,6 +163,7 @@
     (log/info message-json)
     (case (:type message-json)
       "connect" (irc/init ch (:server message-json) (:port message-json) (:username message-json) (:channel message-json))
+      "disconnect" (irc/disconnect)
       "get-participants" (irc/participants (:channel message-json))
       "send-message" (irc/privmsg (:channel message-json) (:msg message-json))
       (log/info "No matching clause"))))

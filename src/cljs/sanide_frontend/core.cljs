@@ -23,6 +23,7 @@
 
 (defn init []
   (re-frame/dispatch-sync [::events/initialize-db])
+  (re-frame/dispatch-sync [::events/init-sanscript])
   (re-frame/dispatch-sync [::rp/add-keyboard-event-listener "keydown"])
   (re-frame/dispatch-sync [::events/get-examples])
   (re-frame/dispatch-sync [::events/ws-connect])
