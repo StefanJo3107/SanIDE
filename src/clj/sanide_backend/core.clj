@@ -2,7 +2,8 @@
   (:require [org.httpkit.server :as hk-server]
             [taoensso.timbre :as log]
             [sanide-backend.routes :as routes]
-            [ring.middleware.reload :as reload]))
+            [ring.middleware.reload :as reload]
+            [sanide-backend.config :as config]))
 
 
 (defn reloading-ring-handler
@@ -27,6 +28,6 @@
     (hk-server/run-server handler* server-options)))
 
 (defn -main [& _]
-  (run-server {:dev-mode? true :server-options {:port 9000}})
-  (log/info "Started server on http://localhost:9000")
-  (log/info "Swagger UI available on http://localhost:9000/api-docs/"))
+  (run-server {:dev-mode? true :server-options {:port config/server-port}})
+  (log/info (str "Started server on http://localhost:" config/server-port))
+  (log/info (str "Swagger UI available on http://localhost:" config/server-port "/api-docs")))

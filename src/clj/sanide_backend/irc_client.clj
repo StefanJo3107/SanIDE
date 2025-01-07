@@ -36,7 +36,6 @@
 (defn conn-handler [ws-channel]
   (try (while (= false (:exit @irc-conn))
          (let [msg (.readLine (:in @irc-conn))]
-           (println msg)
            (cond
              (re-find #"^ERROR :Closing Link:" msg) (c/dosync (c/alter irc-conn merge {:exit true}))
              (re-find #"^PING" msg) (pong msg)

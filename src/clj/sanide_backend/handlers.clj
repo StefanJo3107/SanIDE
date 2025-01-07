@@ -10,7 +10,6 @@
             [clojure.data.json :as json]
             [clojure.string :as string]))
 
-;; TODO convert to clojure.java.io.file
 (defn new-project [{{{:keys [project_name]} :query} :parameters}]
   (try
     (let [parent-dir-path (helpers/get-file-path (helpers/dir-picker))]
@@ -39,7 +38,6 @@
       (response/bad-request {:err "An error occurred while trying to open SanScript project"
                              :exc (.getMessage e)}))))
 
-;; TODO convert to clojure.java.io.file
 (defn get-examples [_]
   (try
     (let [examples (reduce #(if (helpers/is-san-project? (java.io.File. (str config/examples-path "/" %2)))
@@ -53,7 +51,6 @@
       (response/bad-request {:err "An error occurred while trying to get example projects"
                              :exc (.getMessage e)}))))
 
-;; TODO convert to clojure.java.io.file
 (defn open-example [{{{:keys [example_name]} :query} :parameters}]
   (try
     (let [example-dir-path (str config/examples-path "/" example_name) example-dir (java.io.File. example-dir-path)]
@@ -68,7 +65,6 @@
       (response/bad-request {:err "An error occurred while trying to open example project"
                              :exc (.getMessage e)}))))
 
-;; TODO convert to clojure.java.io.file
 (defn open-at-path [{{{:keys [path]} :query} :parameters}]
   (try
     (let [dir (java.io.File. path)]

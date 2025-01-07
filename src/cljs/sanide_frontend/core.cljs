@@ -28,7 +28,6 @@
   (re-frame/dispatch-sync [::events/get-examples])
   (re-frame/dispatch-sync [::events/ws-connect])
   (start-loading-timer)
-  ;; (ws/connect)
   (let [project  (js->clj (.parse js/JSON (.getItem js/localStorage "project")) :keywordize-keys true)]
     (when (some? project)
       (re-frame/dispatch [::events/open-at-path (:project_path project)])))

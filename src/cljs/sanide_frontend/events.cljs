@@ -12,7 +12,7 @@
    [goog.string.format]
    [sanide-frontend.common :as common]))
 
-;; reg-event-db
+;; ------------ reg-event-db ------------
 (re-frame/reg-event-db
  ::initialize-db
  (fn [_ _]
@@ -101,11 +101,6 @@
  (fn [db [_ val]]
    (assoc db :irc-loading val)))
 
-(re-frame/reg-event-fx
- ::response-failure-notify
- (fn [_ [_ fail]]
-   {::error-notify (:err (:response fail))}))
-
 (re-frame/reg-event-db
  ::get-examples-result
  (fn [db [_ result]]
@@ -121,8 +116,9 @@
  (fn [db _]
    (let [loading-chars ["" "" "" "" "" ""]]
      (assoc db :loading-char (get loading-chars (mod (+ (.indexOf loading-chars (:loading-char db)) 1) (count loading-chars)))))))
+;; --------------------------------------
 
-;; reg-event-fx
+;; ------------ reg-event-fx ------------
 (re-frame/reg-event-fx
  ::close-project
  [(re-frame/inject-cofx ::remove-cached-project)]
@@ -159,6 +155,11 @@
  (fn [cofx [_ result]]
    {:db (assoc (:db cofx) :build-result (:exc (:response result)) :flash-loading false)
     ::error-notify (:err (:response result))}))
+
+(re-frame/reg-event-fx
+ ::response-failure-notify
+ (fn [_ [_ fail]]
+   {::error-notify (:err (:response fail))}))
 
 (re-frame/reg-event-fx
  ::get-new-project
@@ -250,12 +251,36 @@
                  :on-request [::flash-loading]
                  :on-failure [::build-failure]}}))
 
-;cofx
-(re-frame/reg-cofx
- ::remove-cached-project
- (fn [_ _]
-   (.removeItem js/localStorage "project")))
+(re-frame/reg-event-fx
+ ::irc-connect
+ (fn [cofx [_ vals]]
+   {::irc-connect-fx {:socket (get-in cofx [:db :ws-socket])
+                      :server (:server vals)
+                      :port (:port vals)
+                      :username (:username vals)
+                      :channel (:channel vals)}
+    :fx [[:dispatch [::set-server-address (:server vals)]]
+         [:dispatch [::set-server-port (:port vals)]]
+         [:dispatch [::set-username (:username vals)]]
+         [:dispatch [::set-channel (:channel vals)]]
+         [:dispatch [::set-irc-loading true]]]}))
 
+(re-frame/reg-event-fx
+ ::ws-connect
+ [(re-frame/inject-cofx ::ws-connect-cofx {:socket-id :irc-socket :url config/ws-url})]
+ (fn [cofx _]
+   {:db (assoc (:db cofx) :ws-socket (:irc-socket cofx))}))
+
+(re-frame/reg-event-fx
+ ::irc-disconnect
+ (fn [cofx _]
+   {::irc-disconnect-fx {:socket (get-in cofx [:db :ws-socket])}
+    :fx [[:dispatch [::set-irc-connected false]]
+         [:dispatch [::reset-participants]]
+         [:dispatch [::set-server-address ""]]
+         [:dispatch [::set-username ""]]
+         [:dispatch [::set-channel ""]]
+         [:dispatch [::reset-messages]]]}))
 
 (defn current-time []
   (let [now (js/Date.)
@@ -263,7 +288,22 @@
         minute (.getMinutes now)]
     (str (gstring/format "%02d" hour) ":" (gstring/format "%02d" minute))))
 
-;; websockets
+(re-frame/reg-event-fx
+ ::irc-send-msg
+ (fn [cofx [_ msg]]
+   {::irc-send-msg-fx {:socket (get-in cofx [:db :ws-socket]) :msg msg
+                       :channel (get-in cofx [:db :channel])}
+    :fx [[:dispatch [::add-message {:from (get-in cofx [:db :username])
+                                    :time (current-time) :type "PRIVMSG"
+                                    :msg msg}]]]}))
+;; --------------------------------------
+
+;; ------------ reg-event-cofx ------------
+(re-frame/reg-cofx
+ ::remove-cached-project
+ (fn [_ _]
+   (.removeItem js/localStorage "project")))
+
 (defn irc-msg-handler
   [msg]
   (let [msgsplit (str/split (.-data msg) #" ") msglen (count msgsplit)]
@@ -302,13 +342,9 @@
                                    {:on-message irc-msg-handler
                                     :on-open #(println "Opening new ws connection")
                                     :on-close #(println "Closing ws connection")}))))
+;; --------------------------------------
 
-(re-frame/reg-event-fx
- ::ws-connect
- [(re-frame/inject-cofx ::ws-connect-cofx {:socket-id :irc-socket :url config/ws-url})]
- (fn [cofx _]
-   {:db (assoc (:db cofx) :ws-socket (:irc-socket cofx))}))
-
+;; ------------ reg-event-fx ------------
 (re-frame/reg-fx
  ::irc-connect-fx
  (fn [options]
@@ -320,37 +356,12 @@
              :channel (:channel options)}
             fmt/json)))
 
-(re-frame/reg-event-fx
- ::irc-connect
- (fn [cofx [_ vals]]
-   {::irc-connect-fx {:socket (get-in cofx [:db :ws-socket])
-                      :server (:server vals)
-                      :port (:port vals)
-                      :username (:username vals)
-                      :channel (:channel vals)}
-    :fx [[:dispatch [::set-server-address (:server vals)]]
-         [:dispatch [::set-server-port (:port vals)]]
-         [:dispatch [::set-username (:username vals)]]
-         [:dispatch [::set-channel (:channel vals)]]
-         [:dispatch [::set-irc-loading true]]]}))
-
 (re-frame/reg-fx
  ::irc-disconnect-fx
  (fn [options]
    (ws/send (:socket options)
             {:type "disconnect"}
             fmt/json)))
-
-(re-frame/reg-event-fx
- ::irc-disconnect
- (fn [cofx _]
-   {::irc-disconnect-fx {:socket (get-in cofx [:db :ws-socket])}
-    :fx [[:dispatch [::set-irc-connected false]]
-         [:dispatch [::reset-participants]]
-         [:dispatch [::set-server-address ""]]
-         [:dispatch [::set-username ""]]
-         [:dispatch [::set-channel ""]]
-         [:dispatch [::reset-messages]]]}))
 
 (re-frame/reg-fx
  ::irc-send-msg-fx
@@ -375,12 +386,4 @@
  ::success-notify
  (fn [val]
    (common/success-toast val)))
-
-(re-frame/reg-event-fx
- ::irc-send-msg
- (fn [cofx [_ msg]]
-   {::irc-send-msg-fx {:socket (get-in cofx [:db :ws-socket]) :msg msg
-                       :channel (get-in cofx [:db :channel])}
-    :fx [[:dispatch [::add-message {:from (get-in cofx [:db :username])
-                                    :time (current-time) :type "PRIVMSG"
-                                    :msg msg}]]]}))
+;; --------------------------------------

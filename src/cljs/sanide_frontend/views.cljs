@@ -135,7 +135,6 @@
                                              :config_path (str (:project_path project) "/config.toml")}])
         @flash-loading]]]
      [:div.code [:div.codearea [:> Editor {:height "100%"
-                              ;; :defaultLanguage "javascript"
                                            :theme "vs-dark"
                                            :value (if (= active-file (:payload_name project))
                                                     latest-payload
