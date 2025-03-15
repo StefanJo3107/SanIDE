@@ -61,8 +61,9 @@
 
 
 (t/deftest test-create-project
-  (let [temp-dir-path "test-project-dir"
+  (let [temp-dir-path "helper-test-dir"
         project-name "test-project"]
+    (.mkdir (io/file temp-dir-path))
     (helpers/create-project temp-dir-path project-name)
     (t/is (.exists (io/file temp-dir-path project-name)))
     (t/is (.exists (io/file temp-dir-path project-name (str project-name ".san"))))

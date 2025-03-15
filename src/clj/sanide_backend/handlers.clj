@@ -77,7 +77,7 @@
     (catch Exception e
       (str "caught exception:" (.getMessage e))
       (response/bad-request {:err "An error occurred while trying to open SanScript project"
-                             :exc (.getMessage e)}))))
+                             :exc e}))))
 
 (defn save-file [{{{:keys [file_path content]} :body} :parameters}]
   (try
