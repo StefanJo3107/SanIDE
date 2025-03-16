@@ -19,19 +19,26 @@
         com.taoensso/timbre {:mvn/version "6.6.1"}
         clojure-interop/javax.swing {:mvn/version "1.0.4"}
         babashka/process {:mvn/version "0.5.22"}
-        nrepl/nrepl {:mvn/version "1.3.0"}}
+        nrepl/nrepl {:mvn/version "1.3.0"}
+        binaryage/devtools {:mvn/version "1.0.6"}
+        nilenso/wscljs {:mvn/version "0.2.0"}}
 
  :mvn/repos {"central" {:url "https://repo1.maven.org/maven2/"}
              "clojars" {:url "https://repo.clojars.org/"}}
 
- :aliases {:test {:extra-paths ["test/clj"]
-                  :extra-deps {lambdaisland/kaocha {:mvn/version "1.66.1034"}
-                               lambdaisland/kaocha-cloverage {:mvn/version "1.0.75"}
-                               day8.re-frame/test {:mvn/version "0.1.5"}
-                               ring/ring-mock {:mvn/version "0.4.0"}
-                               com.magnars/test-with-files {:mvn/version "2021-02-17"}}
-                  :main-opts ["-m" "kaocha.runner"]}
-
+ :aliases {:test-backend {:extra-paths ["test/clj"]
+                          :extra-deps {lambdaisland/kaocha {:mvn/version "1.66.1034"}
+                                       lambdaisland/kaocha-cloverage {:mvn/version "1.0.75"}
+                                       lambdaisland/deep-diff2 {:mvn/version "2.12.219"}
+                                       ring/ring-mock {:mvn/version "0.4.0"}
+                                       com.magnars/test-with-files {:mvn/version "2021-02-17"}}
+                          :main-opts ["-m" "kaocha.runner"]}
+           :test-frontend {:extra-paths ["test/cljs"]
+                           :extra-deps {olical/cljs-test-runner {:mvn/version "3.8.1"}
+                                        cljsjs/react {:mvn/version "18.3.1-1"}
+                                        cljsjs/react-dom {:mvn/version "18.3.1-1"}
+                                        day8.re-frame/test {:mvn/version "0.1.5"}}
+                           :main-opts ["-m" "cljs-test-runner.main"]}
            :clj-kondo
            {:extra-deps {clj-kondo/clj-kondo {:mvn/version "RELEASE"}}
             :jvm-opts ["-Dghostwheel.enabled=true"]
@@ -40,8 +47,7 @@
            :frontend
            {:main-opts ["-m" "shadow.cljs.devtools.cli"
                         "watch" ":app"]
-            :extra-deps {binaryage/devtools {:mvn/version "1.0.6"}
-                         nilenso/wscljs {:mvn/version "0.2.0"}}}
+            :extra-deps {}}
 
            :api {:main-opts ["-m" "sanide-backend.core"]}
            :repl {:extra-deps {ring/ring-mock {:mvn/version "0.4.0"}

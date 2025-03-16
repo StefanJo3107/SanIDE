@@ -24,3 +24,6 @@ config.toml
 san_compiler
 san_vm
 santool
+
+.cljs_node_repl/
+cljs-test-runner-out/
