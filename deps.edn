@@ -39,6 +39,9 @@
                                         cljsjs/react-dom {:mvn/version "18.3.1-1"}
                                         day8.re-frame/test {:mvn/version "0.1.5"}}
                            :main-opts ["-m" "cljs-test-runner.main"]}
+           :bench {:extra-paths ["test/clj"]
+                   :extra-deps {criterium/criterium {:mvn/version "0.4.6"}}
+                   :main-opts ["-m" "sanide-backend.benchmarking"]}
            :clj-kondo
            {:extra-deps {clj-kondo/clj-kondo {:mvn/version "RELEASE"}}
             :jvm-opts ["-Dghostwheel.enabled=true"]

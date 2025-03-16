@@ -20,6 +20,7 @@
 /.calva/
 
 /SanScript/
+/test/clj/sanide_backend/bench-results/*
 config.toml
 san_compiler
 san_vm
