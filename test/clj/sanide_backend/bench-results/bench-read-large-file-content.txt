@@ -1,0 +1,6 @@
+Evaluation count : 510 in 6 samples of 85 calls.
+             Execution time mean : 1.227171 ms
+    Execution time std-deviation : 32.513316 µs
+   Execution time lower quantile : 1.188489 ms ( 2.5%)
+   Execution time upper quantile : 1.256640 ms (97.5%)
+                   Overhead used : 8.064393 ns
